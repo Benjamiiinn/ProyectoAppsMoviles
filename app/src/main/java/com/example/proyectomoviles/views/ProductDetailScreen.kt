@@ -1,6 +1,8 @@
 package com.example.proyectomoviles.views
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -31,6 +33,7 @@ fun ProductDetailScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
+                .verticalScroll(rememberScrollState()) // <-- ¡AQUÍ ESTÁ LA MAGIA!
         ) {
             AsyncImage(
                 model = producto.imagenUrl,
@@ -74,7 +77,7 @@ fun ProductDetailScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (producto.stock > 0) Color.Unspecified else Color.Red
             )
-            Spacer(modifier = Modifier.weight(1.0f)) // Empuja el botón hacia abajo
+            Spacer(modifier = Modifier.height(32.dp)) // Espacio antes del botón
             Button(
                 onClick = { cartViewModel.addToCart(producto) },
                 modifier = Modifier.fillMaxWidth(),
@@ -88,7 +91,11 @@ fun ProductDetailScreen(
             }
         }
     } else {
-        // Manejar el caso en que el producto no se encuentra
-        Text(text = "Producto no encontrado")
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = "Producto no encontrado")
+        }
     }
 }
