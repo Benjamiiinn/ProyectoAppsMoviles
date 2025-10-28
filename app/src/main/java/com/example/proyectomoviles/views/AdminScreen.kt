@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -11,27 +13,38 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.proyectomoviles.model.Producto
 import com.example.proyectomoviles.viewmodel.ProductViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminScreen(productViewModel: ProductViewModel = viewModel()) {
+fun AdminScreen(productViewModel: ProductViewModel = viewModel(), navController: NavController) {
     val productos = productViewModel.productos
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        item {
-            Text("Panel de Administración", style = MaterialTheme.typography.titleLarge)
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(onClick = { navController.navigate("addProduct") }) {
+                Icon(Icons.Default.Add, contentDescription = "Agregar Producto")
+            }
         }
-        items(productos) { producto ->
-            AdminProductRow(producto = producto, onStockChange = {
-                productViewModel.updateStock(producto.id, it)
-            })
-            Divider()
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues) // Usamos el padding del Scaffold
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            item {
+                Text("Gestión de Productos", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(top=16.dp))
+            }
+            items(productos) { producto ->
+                AdminProductRow(producto = producto, onStockChange = {
+                    productViewModel.updateStock(producto.id, it)
+                })
+                Divider()
+            }
         }
     }
 }
@@ -48,7 +61,7 @@ fun AdminProductRow(producto: Producto, onStockChange: (Int) -> Unit) {
         Text(producto.nombre, modifier = Modifier.weight(1f))
         OutlinedTextField(
             value = newStock,
-            onValueChange = { newStock = it },
+            onValueChange = { newStock = it.filter { it.isDigit() } }, // Solo permite dígitos
             label = { Text("Stock") },
             modifier = Modifier.width(120.dp),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),

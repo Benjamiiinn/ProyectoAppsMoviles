@@ -39,7 +39,7 @@ class MainActivity : ComponentActivity() {
 
                     if (showCartIcon) {
                         MiTopBar(title, cartViewModel, navController)
-                    } else if (currentRoute == "admin") {
+                    } else if (currentRoute == "admin" || currentRoute == "addProduct") {
                         TopAppBar(title = { Text(title) })
                     }
                 }
@@ -86,8 +86,12 @@ class MainActivity : ComponentActivity() {
                         PurchaseErrorScreen(navController)
                     }
                     composable("admin") {
-                        title = "Administración de Stock"
-                        AdminScreen(productViewModel)
+                        title = "Gestión de Productos"
+                        AdminScreen(productViewModel, navController)
+                    }
+                    composable("addProduct") {
+                        title = "Agregar Producto"
+                        AddProductScreen(navController)
                     }
                 }
             }
