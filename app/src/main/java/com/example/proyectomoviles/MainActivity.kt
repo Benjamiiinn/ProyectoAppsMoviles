@@ -20,6 +20,7 @@ import com.example.proyectomoviles.viewmodel.CartViewModel
 import com.example.proyectomoviles.viewmodel.ProductViewModel
 import com.example.proyectomoviles.views.HomeScreen
 import com.example.proyectomoviles.views.ProductDetailScreen
+import com.example.proyectomoviles.views.CartScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,7 +35,13 @@ class MainActivity : ComponentActivity() {
 
             Scaffold(
                 topBar = {
-                    MiTopBar(title = title)
+                    // Solo mostramos la barra con el carrito en ciertas pantallas
+                    val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
+                    if (currentRoute?.startsWith("home") == true || 
+                        currentRoute?.startsWith("productDetail") == true ||
+                        currentRoute == "cart") {
+                        MiTopBar(title, cartViewModel, navController)
+                    }
                 }
             ) { innerPadding ->
                 NavHost(
@@ -62,6 +69,10 @@ class MainActivity : ComponentActivity() {
                         title = "Detalle del Producto"
                         val productId = it.arguments?.getInt("productId") ?: -1
                         ProductDetailScreen(productId, productViewModel, cartViewModel, navController)
+                    }
+                    composable("cart") {
+                        title = "Carrito"
+                        CartScreen(cartViewModel, navController)
                     }
                 }
             }
