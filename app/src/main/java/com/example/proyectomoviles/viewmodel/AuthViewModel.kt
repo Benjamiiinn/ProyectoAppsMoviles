@@ -1,5 +1,6 @@
 package com.example.proyectomoviles.viewmodel
 
+import android.util.Patterns
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import com.example.proyectomoviles.model.FakeDatabase
@@ -9,6 +10,10 @@ class AuthViewModel : ViewModel() {
 
     var mensaje = mutableStateOf("")
     var usuarioActual = mutableStateOf<String?>(null)
+
+    private fun validarEmail(email: String): Boolean {
+        return Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    }
 
     fun validarRut(rut: String): Boolean {
         try {
@@ -45,6 +50,10 @@ class AuthViewModel : ViewModel() {
     }
 
     fun registrar(nombre: String, email: String, password: String, rut: String): Boolean {
+        if (!validarEmail(email)) {
+            mensaje.value = "Email inválido ❌"
+            return false
+        }
         if (!validarRut(rut)) {
             mensaje.value = "RUT inválido ❌"
             return false
@@ -60,6 +69,10 @@ class AuthViewModel : ViewModel() {
     }
 
     fun login(email: String, password: String): Boolean {
+        if (!validarEmail(email)) {
+            mensaje.value = "Email inválido ❌"
+            return false
+        }
         return if (FakeDatabase.login(email, password)) {
             usuarioActual.value = email
             mensaje.value = "Inicio de sesión exitoso 🎉"
