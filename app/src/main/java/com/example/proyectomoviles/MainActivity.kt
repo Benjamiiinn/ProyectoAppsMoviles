@@ -22,6 +22,7 @@ import com.example.proyectomoviles.views.CartScreen
 import com.example.proyectomoviles.views.ConfirmationScreen
 import com.example.proyectomoviles.views.HomeScreen
 import com.example.proyectomoviles.views.ProductDetailScreen
+import androidx.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
