@@ -12,7 +12,7 @@ object FakeProductService {
             descripcion = "Un juego de rol de mundo abierto con una historia increíble.",
             precio = 24990.0,
             plataforma = "PC",
-            imagenUrl = "https://www.thewitcher.com/us/es",
+            imagenUrl = "https://www.thewitcher.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Ftw3.f87ded81.jpg&w=1920&q=75",
             stock = 15
         ),
         Producto(
@@ -21,7 +21,7 @@ object FakeProductService {
             descripcion = "Vive la vida de un forajido en el corazón de América.",
             precio = 34990.0,
             plataforma = "PS5",
-            imagenUrl = "https://store.steampowered.com/agecheck/app/1174180/?l=spanish&curator_clanid=11846346",
+            imagenUrl = "https://image.api.playstation.com/vulcan/img/rnd/202011/1215/WyHa1BM3ISDVqYSEUMB9VZJs.png",
             stock = 8
         ),
         Producto(
@@ -30,7 +30,7 @@ object FakeProductService {
             descripcion = "Explora el vasto reino de Hyrule en esta aventura épica.",
             precio = 49990.0,
             plataforma = "Nintendo Switch",
-            imagenUrl = "https://www.nintendo.com/es-es/Juegos/Juegos-de-Nintendo-Switch/The-Legend-of-Zelda-Breath-of-the-Wild-1173609.html?srsltid=AfmBOopZcpXyHGYCvT1jMiDB8ig00NEYT-ALfdiENhErLHATnCUO61A1",
+            imagenUrl = "https://juegosdigitaleschile.com/files/images/productos/1637859721-the-legend-of-zelda-breath-of-the-wild-nintendo-switch.jpg",
             stock = 12
         ),
         Producto(
@@ -39,7 +39,7 @@ object FakeProductService {
             descripcion = "El Jefe Maestro regresa en la campaña más expansiva de Halo hasta la fecha.",
             precio = 44990.0,
             plataforma = "Xbox Series X",
-            imagenUrl = "https://store.steampowered.com/app/1240440/Halo_Infinite/?l=spanish",
+            imagenUrl = "https://juegosdigitaleschile.com/files/images/productos/1644611182-halo-infinite-xbox-serie-xs.jpg",
             stock = 5
         ),
         Producto(
@@ -48,7 +48,7 @@ object FakeProductService {
             descripcion = "Un RPG de acción y aventura de mundo abierto ambientado en Night City.",
             precio = 29990.0,
             plataforma = "PC",
-            imagenUrl = "https://www.cyberpunk.net/us/es/",
+            imagenUrl = "https://image.api.playstation.com/vulcan/ap/rnd/202111/3013/bxSj4jO0KBqUgAbH3zuNjCje.jpg",
             stock = 20
         ),
         Producto(
@@ -57,7 +57,7 @@ object FakeProductService {
             descripcion = "Kratos y Atreus se embarcan en un viaje mítico en busca de respuestas.",
             precio = 59990.0,
             plataforma = "PS5",
-            imagenUrl = "https://store.playstation.com/es-cl/product/UP9000-PPSA08329_00-GOWRAGNAROK00000?gclsrc=aw.ds&gad_source=1&gad_campaignid=14766217841&gbraid=0AAAAADc1uAaBVCmAoiwdup6MleqeO2MXw&gclid=Cj0KCQjwsPzHBhDCARIsALlWNG04BDsg-ci3w3km6weHiUwlDavheqXRF6KiNowKH344cKx2Yn3Ujc0aArF9EALw_wcB",
+            imagenUrl = "https://chilejuegosdigitales.com/wp-content/uploads/2023/11/s1das.jpg",
             stock = 0 // Producto sin stock
         ),
         Producto(
@@ -66,7 +66,7 @@ object FakeProductService {
             descripcion = "Un vasto mundo de fantasía oscura te espera en la nueva obra de FromSoftware.",
             precio = 54990.0,
             plataforma = "PC",
-            imagenUrl = "https://store.steampowered.com/agecheck/app/1245620/?l=spanish",
+            imagenUrl = "https://image.api.playstation.com/vulcan/ap/rnd/202110/2000/YMUoJUYNX0xWk6eTKuZLr5Iw.jpg",
             stock = 10
         ),
         Producto(
@@ -75,7 +75,7 @@ object FakeProductService {
             descripcion = "Juega como Peter Parker y Miles Morales mientras se enfrentan a la prueba definitiva.",
             precio = 64990.0,
             plataforma = "PS5",
-            imagenUrl = "https://www.playstation.com/es-cl/games/marvels-spider-man-2/",
+            imagenUrl = "https://image.api.playstation.com/vulcan/ap/rnd/202306/1219/2028edeaf4c0b60142550a3d6e024b6009853ceb9f51591e.jpg",
             stock = 7
         ),
         Producto(
@@ -84,7 +84,7 @@ object FakeProductService {
             descripcion = "Explora los vibrantes y siempre cambiantes paisajes de mundo abierto de México.",
             precio = 49990.0,
             plataforma = "Xbox Series X",
-            imagenUrl = "https://www.playstation.com/es-cl/games/forza-horizon-5/",
+            imagenUrl = "https://image.api.playstation.com/vulcan/ap/rnd/202501/2717/42b3ee6b1b2094212231b0b0a82824f687fc5c4dc9bde31c.png",
             stock = 18
         ),
         Producto(
@@ -93,7 +93,7 @@ object FakeProductService {
             descripcion = "¡Espera lo inesperado en la próxima evolución de la diversión de Mario en 2D!",
             precio = 49990.0,
             plataforma = "Nintendo Switch",
-            imagenUrl = "https://www.nintendo.com/es-cl/store/products/super-mario-bros-wonder-switch/?srsltid=AfmBOorjTBmzzejwXLIQVldrPj1GrLldSBOuwC6f_kIAK732mKk6F95l",
+            imagenUrl = "https://www.todojuegos.cl/Productos/_mediaProd/31515/super_mario_wonder.jpg",
             stock = 25
         ),
         Producto(
@@ -102,7 +102,7 @@ object FakeProductService {
             descripcion = "Reúne a tu grupo y vuelve a los Reinos Olvidados en una historia de compañerismo y traición.",
             precio = 49990.0,
             plataforma = "PC",
-            imagenUrl = "https://store.steampowered.com/agecheck/app/1086940/",
+            imagenUrl = "https://image.api.playstation.com/vulcan/ap/rnd/202302/2321/3098481c9164bb5f33069b37e49fba1a572ea3b89971ee7b.jpg",
             stock = 3
         ),
         Producto(
@@ -111,7 +111,7 @@ object FakeProductService {
             descripcion = "El primer universo nuevo en más de 25 años de Bethesda Game Studios.",
             precio = 59990.0,
             plataforma = "Xbox Series X",
-            imagenUrl = "https://store.steampowered.com/agecheck/app/1716740/?l=spanish",
+            imagenUrl = "https://store-images.s-microsoft.com/image/apps.52870.13567343664224659.1eb6fdf9-8a0b-4344-a135-ab17dfa3c609.20ed1644-2c01-4d5a-b636-3d54ac941a1f?q=90&w=480&h=270",
             stock = 9
         )
     )
