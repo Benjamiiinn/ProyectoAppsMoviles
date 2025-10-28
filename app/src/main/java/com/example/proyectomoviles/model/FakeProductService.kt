@@ -1,8 +1,11 @@
 package com.example.proyectomoviles.model
 
+import androidx.compose.runtime.mutableStateListOf
+
 object FakeProductService {
 
-    private val productos = listOf(
+    // Convertimos la lista a una lista mutable y observable por Compose
+    private val _productos = mutableStateListOf(
         Producto(
             id = 1,
             nombre = "The Witcher 3: Wild Hunt",
@@ -68,7 +71,7 @@ object FakeProductService {
         ),
         Producto(
             id = 8,
-            nombre = "Marvel's Spider-Man 2",
+            nombre = "Marvel\'s Spider-Man 2",
             descripcion = "Juega como Peter Parker y Miles Morales mientras se enfrentan a la prueba definitiva.",
             precio = 64990.0,
             plataforma = "PS5",
@@ -95,7 +98,7 @@ object FakeProductService {
         ),
         Producto(
             id = 11,
-            nombre = "Baldur's Gate 3",
+            nombre = "Baldur\'s Gate 3",
             descripcion = "Reúne a tu grupo y vuelve a los Reinos Olvidados en una historia de compañerismo y traición.",
             precio = 49990.0,
             plataforma = "PC",
@@ -113,7 +116,13 @@ object FakeProductService {
         )
     )
 
-    fun getProductos(): List<Producto> {
-        return productos
+    val productos: List<Producto> get() = _productos
+
+    fun updateStock(productId: Int, newStock: Int) {
+        val index = _productos.indexOfFirst { it.id == productId }
+        if (index != -1) {
+            val oldProduct = _productos[index]
+            _productos[index] = oldProduct.copy(stock = newStock)
+        }
     }
 }

@@ -3,8 +3,6 @@ package com.example.proyectomoviles.views
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,7 +23,7 @@ fun ProductDetailScreen(
     cartViewModel: CartViewModel = viewModel(),
     navController: NavController
 ) {
-    val productos by productViewModel.productos.collectAsState()
+    val productos = productViewModel.productos
     val producto = productos.find { it.id == productId }
 
     if (producto != null) {

@@ -32,12 +32,15 @@ class MainActivity : ComponentActivity() {
             Scaffold(
                 topBar = {
                     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-                    val showTopBar = currentRoute?.startsWith("home") == true ||
+                    val showCartIcon = currentRoute?.startsWith("home") == true ||
                         currentRoute?.startsWith("productDetail") == true ||
                         currentRoute == "cart"
 
-                    if (showTopBar) {
+                    if (showCartIcon) {
                         MiTopBar(title, cartViewModel, navController)
+                    } else if (currentRoute == "admin") {
+                        // Barra simple para el panel de admin
+                        TopAppBar(title = { Text(title) })
                     }
                 }
             ) { innerPadding ->
@@ -56,8 +59,7 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("home/{email}") { backStackEntry ->
                         title = "Inicio"
-                        val email = backStackEntry.arguments?.getString("email") ?: ""
-                        HomeScreen(email, productViewModel, navController)
+                        HomeScreen(authViewModel, productViewModel, navController)
                     }
                     composable(
                         "productDetail/{productId}",
@@ -74,6 +76,10 @@ class MainActivity : ComponentActivity() {
                     composable("confirmation") {
                         title = "Compra Completada"
                         ConfirmationScreen(navController)
+                    }
+                    composable("admin") {
+                        title = "Administración de Stock"
+                        AdminScreen(productViewModel)
                     }
                 }
             }

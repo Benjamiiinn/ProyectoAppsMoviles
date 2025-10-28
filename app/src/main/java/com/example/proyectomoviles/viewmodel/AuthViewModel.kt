@@ -15,6 +15,10 @@ class AuthViewModel : ViewModel() {
         return Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
 
+    fun isAdmin(): Boolean {
+        return usuarioActual.value == "admin@tienda.com"
+    }
+
     fun validarRut(rut: String): Boolean {
         try {
             var rutLimpio = rut.toUpperCase().replace(".", "").replace("-", "")
@@ -51,62 +55,62 @@ class AuthViewModel : ViewModel() {
 
     fun registrar(nombre: String, email: String, password: String, rut: String): Boolean {
         if (nombre.isBlank()) {
-            mensaje.value = "Falta el nombre "
+            mensaje.value = "Falta el nombre ❌"
             return false
         }
         if (email.isBlank()) {
-            mensaje.value = "Falta el email "
+            mensaje.value = "Falta el email ❌"
             return false
         }
         if (password.isBlank()) {
-            mensaje.value = "Falta la contraseña "
+            mensaje.value = "Falta la contraseña ❌"
             return false
         }
         if (rut.isBlank()) {
-            mensaje.value = "Falta el RUT "
+            mensaje.value = "Falta el RUT ❌"
             return false
         }
 
         if (!validarEmail(email)) {
-            mensaje.value = "Email inválido "
+            mensaje.value = "Email inválido ❌"
             return false
         }
         if (!validarRut(rut)) {
-            mensaje.value = "RUT inválido "
+            mensaje.value = "RUT inválido ❌"
             return false
         }
 
         val nuevo = Usuario(nombre, email, password, rut)
         return if (FakeDatabase.registrar(nuevo)) {
-            mensaje.value = "Registro exitoso "
+            mensaje.value = "Registro exitoso ✅"
             true
         } else {
-            mensaje.value = "El usuario o RUT ya existe "
+            mensaje.value = "El usuario o RUT ya existe ❌"
             false
         }
     }
 
     fun login(email: String, password: String): Boolean {
         if (email.isBlank()) {
-            mensaje.value = "Falta el email "
+            mensaje.value = "Falta el email ❌"
             return false
         }
         if (password.isBlank()) {
-            mensaje.value = "Falta la contraseña "
+            mensaje.value = "Falta la contraseña ❌"
             return false
         }
 
         if (!validarEmail(email)) {
-            mensaje.value = "Email inválido "
+            mensaje.value = "Email inválido ❌"
             return false
         }
         
         return if (FakeDatabase.login(email, password)) {
             usuarioActual.value = email
-            mensaje.value = "Inicio de sesión exitoso "
+            mensaje.value = "Inicio de sesión exitoso 🎉"
             true
         } else {
-            mensaje.value = "Credenciales inválidas "
+            mensaje.value = "Credenciales inválidas ❌"
             false
         }
     }
