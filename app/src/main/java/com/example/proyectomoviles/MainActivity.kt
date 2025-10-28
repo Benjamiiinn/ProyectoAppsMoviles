@@ -18,10 +18,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.*
 import com.example.proyectomoviles.viewmodel.CartViewModel
 import com.example.proyectomoviles.viewmodel.ProductViewModel
+import com.example.proyectomoviles.views.CartScreen
+import com.example.proyectomoviles.views.ConfirmationScreen
 import com.example.proyectomoviles.views.HomeScreen
 import com.example.proyectomoviles.views.ProductDetailScreen
-import com.example.proyectomoviles.views.CartScreen
 
+@OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,12 +37,15 @@ class MainActivity : ComponentActivity() {
 
             Scaffold(
                 topBar = {
-                    // Solo mostramos la barra con el carrito en ciertas pantallas
                     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-                    if (currentRoute?.startsWith("home") == true || 
+                    val showCartIcon = currentRoute?.startsWith("home") == true ||
                         currentRoute?.startsWith("productDetail") == true ||
-                        currentRoute == "cart") {
+                        currentRoute == "cart"
+
+                    if (showCartIcon) {
                         MiTopBar(title, cartViewModel, navController)
+                    } else {
+                        TopAppBar(title = { Text(title) })
                     }
                 }
             ) { innerPadding ->
@@ -73,6 +78,10 @@ class MainActivity : ComponentActivity() {
                     composable("cart") {
                         title = "Carrito"
                         CartScreen(cartViewModel, navController)
+                    }
+                    composable("confirmation") {
+                        title = "Compra Completada"
+                        ConfirmationScreen(navController)
                     }
                 }
             }

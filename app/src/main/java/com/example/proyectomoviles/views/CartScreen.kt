@@ -34,7 +34,7 @@ fun CartScreen(cartViewModel: CartViewModel, navController: NavController) {
             }
         } else {
             LazyColumn(modifier = Modifier.weight(1f)) {
-                items(cartItems) { item ->
+                items(cartItems, key = { it.id }) { item ->
                     CartItemRow(item = item, onRemove = { cartViewModel.removeFromCart(item) })
                     Divider()
                 }
@@ -49,7 +49,10 @@ fun CartScreen(cartViewModel: CartViewModel, navController: NavController) {
             }
             Spacer(modifier = Modifier.height(16.dp))
             Button(
-                onClick = { /* Lógica de pago */ },
+                onClick = { 
+                    cartViewModel.clearCart()
+                    navController.navigate("confirmation")
+                },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Finalizar Compra")
