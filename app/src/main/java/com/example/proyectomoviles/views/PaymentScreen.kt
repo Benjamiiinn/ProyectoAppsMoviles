@@ -29,8 +29,6 @@ fun PaymentScreen(cartViewModel: CartViewModel, navController: NavController) {
         Text("Resumen del Pedido", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Aquí podríamos mostrar un resumen de los productos, pero por simplicidad solo mostramos el total.
-
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
@@ -71,11 +69,12 @@ fun PaymentScreen(cartViewModel: CartViewModel, navController: NavController) {
 
         Button(
             onClick = {
-                // Aquí se ejecuta la lógica de pago
                 if (cartViewModel.checkout()) {
                     navController.navigate("confirmation") {
-                        // Limpiamos el backstack para que no pueda volver al carrito o pago
-                        popUpTo(navController.graph.startDestinationId)
+                        // Limpiamos el historial de navegación HASTA la pantalla de inicio
+                        popUpTo("home/{email}") { 
+                            inclusive = false 
+                        }
                     }
                 } else {
                     navController.navigate("purchaseError")

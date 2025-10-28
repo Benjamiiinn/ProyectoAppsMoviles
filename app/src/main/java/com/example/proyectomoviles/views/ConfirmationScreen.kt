@@ -44,8 +44,8 @@ fun ConfirmationScreen(navController: NavController) {
         Spacer(modifier = Modifier.weight(1f))
         Button(
             onClick = {
-                // Vuelve a la pantalla de inicio, limpiando el historial de navegación intermedio
-                navController.popBackStack("home/{email}", inclusive = false)
+                // Vuelve a la pantalla anterior (que ahora será la de inicio)
+                navController.popBackStack()
             },
             modifier = Modifier.fillMaxWidth()
         ) {
