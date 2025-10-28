@@ -30,7 +30,7 @@ object FakeProductService {
             descripcion = "Explora el vasto reino de Hyrule en esta aventura épica.",
             precio = 49990.0,
             plataforma = "Nintendo Switch",
-            imagenUrl = "https://juegosdigitaleschile.com/files/images/productos/1637859721-the-legend-of-zelda-breath-of-the-wild-nintendo-switch.jpg",
+            imagenUrl = "https://www.nintendo.com/eu/media/images/10_share_images/games_15/wiiu_14/SI_WiiU_TheLegendOfZeldaBreathOfTheWild_image1600w.jpg",
             stock = 12
         ),
         Producto(
@@ -39,7 +39,7 @@ object FakeProductService {
             descripcion = "El Jefe Maestro regresa en la campaña más expansiva de Halo hasta la fecha.",
             precio = 44990.0,
             plataforma = "Xbox Series X",
-            imagenUrl = "https://juegosdigitaleschile.com/files/images/productos/1644611182-halo-infinite-xbox-serie-xs.jpg",
+            imagenUrl = "https://store-images.s-microsoft.com/image/apps.50670.13727851868390641.c9cc5f66-aff8-406c-af6b-440838730be0.d205e025-5444-4eb1-ae46-571ae6895928?q=90&w=480&h=270",
             stock = 5
         ),
         Producto(
@@ -57,7 +57,7 @@ object FakeProductService {
             descripcion = "Kratos y Atreus se embarcan en un viaje mítico en busca de respuestas.",
             precio = 59990.0,
             plataforma = "PS5",
-            imagenUrl = "https://chilejuegosdigitales.com/wp-content/uploads/2023/11/s1das.jpg",
+            imagenUrl = "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/2322010/header.jpg?t=1750909504",
             stock = 0 // Producto sin stock
         ),
         Producto(
@@ -93,7 +93,7 @@ object FakeProductService {
             descripcion = "¡Espera lo inesperado en la próxima evolución de la diversión de Mario en 2D!",
             precio = 49990.0,
             plataforma = "Nintendo Switch",
-            imagenUrl = "https://www.todojuegos.cl/Productos/_mediaProd/31515/super_mario_wonder.jpg",
+            imagenUrl = "https://assets.nintendo.com/image/upload/ar_16:9,c_lpad,w_930/b_white/f_auto/q_auto/store/software/switch/70010000068688/1c5583f6bbce5bccdc923c25c35ba8f42128b55df84f4a2fbeea74b6d1d1516e",
             stock = 25
         ),
         Producto(

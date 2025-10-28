@@ -1,6 +1,5 @@
 package com.example.proyectomoviles
 
-import MiTopBar
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -32,15 +31,17 @@ class MainActivity : ComponentActivity() {
             Scaffold(
                 topBar = {
                     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-                    val showCartIcon = currentRoute?.startsWith("home") == true ||
-                        currentRoute?.startsWith("productDetail") == true ||
-                        currentRoute == "cart" ||
-                        currentRoute == "payment"
+                    val routesWithoutTopBar = setOf("admin", "addProducto", "register", "login")
 
-                    if (showCartIcon) {
-                        MiTopBar(title, cartViewModel, navController)
-                    } else if (currentRoute == "admin" || currentRoute == "addProduct") {
-                        TopAppBar(title = { Text(title) })
+                    if (currentRoute !in routesWithoutTopBar) {
+                        val showCartIcon = currentRoute?.startsWith("home") == true ||
+                            currentRoute?.startsWith("productDetail") == true ||
+                            currentRoute == "cart" ||
+                            currentRoute == "payment"
+
+                        if (showCartIcon) {
+                            MiTopBar(title, cartViewModel, navController)
+                        }
                     }
                 }
             ) { innerPadding ->

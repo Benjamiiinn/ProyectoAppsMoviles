@@ -28,6 +28,8 @@ val VaporPink = Color(0xFFEA39B8)
 
 val VaporError = Color(0xFFE44C55)
 
+val VaporWhiteBorder = Color(0xFFDEE2E6)
+
 @Composable
 fun outlinedTextFieldColorsCustom(): TextFieldColors {
     return OutlinedTextFieldDefaults.colors(

@@ -1,5 +1,8 @@
 package com.example.proyectomoviles.views
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
@@ -9,6 +12,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -19,13 +24,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.proyectomoviles.R
 import com.example.proyectomoviles.ui.theme.BackgroundDark
 import com.example.proyectomoviles.ui.theme.VaporPink
 import com.example.proyectomoviles.ui.theme.outlinedTextFieldColorsCustom
 import com.example.proyectomoviles.viewmodel.AuthViewModel
 
-val VaporPink = Color(0xFFEA39B8)
-val VaporCyanText = Color(0xFF32FBE2)
 
 @Composable
 fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
@@ -57,17 +61,34 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Image(
+                painter = painterResource(id = R.drawable.vortex_logo),
+                contentDescription = "Logo",
+                modifier = Modifier
+                    .height(150.dp)
+                    .padding(bottom = 20.dp),
+                contentScale = ContentScale.Fit
+            )
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(
+                        BorderStroke(
+                            width = 1.dp,
+                            color = VaporWhiteBorder
+                        ),
+                        shape = CardDefaults.shape
+                    ),
                 colors = CardDefaults.cardColors(
                     containerColor = Color(0xFF6F42C1)
-                )
+                ),
+                shape = CardDefaults.shape
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Registrate", style = MaterialTheme.typography.titleLarge.copy(color = VaporPink))
+                    Text("Registrate", style = MaterialTheme.typography.titleLarge.copy(color = VaporWhiteBorder))
 
                     Spacer(modifier = Modifier.height(16.dp))
 
