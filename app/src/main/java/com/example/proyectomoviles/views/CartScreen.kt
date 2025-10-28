@@ -56,13 +56,10 @@ fun CartScreen(cartViewModel: CartViewModel, navController: NavController) {
             }
             Spacer(modifier = Modifier.height(16.dp))
             Button(
-                onClick = { 
-                    cartViewModel.clearCart()
-                    navController.navigate("confirmation")
-                },
+                onClick = { navController.navigate("payment") }, // <-- ¡CAMBIO IMPORTANTE!
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Finalizar Compra")
+                Text("Proceder al Pago") // Texto actualizado
             }
         }
     }

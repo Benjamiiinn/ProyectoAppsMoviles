@@ -34,12 +34,12 @@ class MainActivity : ComponentActivity() {
                     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
                     val showCartIcon = currentRoute?.startsWith("home") == true ||
                         currentRoute?.startsWith("productDetail") == true ||
-                        currentRoute == "cart"
+                        currentRoute == "cart" ||
+                        currentRoute == "payment"
 
                     if (showCartIcon) {
                         MiTopBar(title, cartViewModel, navController)
                     } else if (currentRoute == "admin") {
-                        // Barra simple para el panel de admin
                         TopAppBar(title = { Text(title) })
                     }
                 }
@@ -73,9 +73,17 @@ class MainActivity : ComponentActivity() {
                         title = "Carrito"
                         CartScreen(cartViewModel, navController)
                     }
+                    composable("payment") {
+                        title = "Realizar Pago"
+                        PaymentScreen(cartViewModel, navController)
+                    }
                     composable("confirmation") {
                         title = "Compra Completada"
                         ConfirmationScreen(navController)
+                    }
+                    composable("purchaseError") {
+                        title = "Error en la Compra"
+                        PurchaseErrorScreen(navController)
                     }
                     composable("admin") {
                         title = "Administración de Stock"
