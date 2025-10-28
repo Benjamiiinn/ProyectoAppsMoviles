@@ -6,23 +6,16 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.example.proyectomoviles.viewmodel.AuthViewModel
-import com.example.proyectomoviles.views.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.*
 import com.example.proyectomoviles.viewmodel.CartViewModel
 import com.example.proyectomoviles.viewmodel.ProductViewModel
-import com.example.proyectomoviles.views.CartScreen
-import com.example.proyectomoviles.views.ConfirmationScreen
-import com.example.proyectomoviles.views.HomeScreen
-import com.example.proyectomoviles.views.ProductDetailScreen
-import androidx.compose.ui.tooling.preview.Preview
+import com.example.proyectomoviles.views.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 class MainActivity : ComponentActivity() {
@@ -39,14 +32,12 @@ class MainActivity : ComponentActivity() {
             Scaffold(
                 topBar = {
                     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-                    val showCartIcon = currentRoute?.startsWith("home") == true ||
+                    val showTopBar = currentRoute?.startsWith("home") == true ||
                         currentRoute?.startsWith("productDetail") == true ||
                         currentRoute == "cart"
 
-                    if (showCartIcon) {
+                    if (showTopBar) {
                         MiTopBar(title, cartViewModel, navController)
-                    } else {
-                        TopAppBar(title = { Text(title) })
                     }
                 }
             ) { innerPadding ->

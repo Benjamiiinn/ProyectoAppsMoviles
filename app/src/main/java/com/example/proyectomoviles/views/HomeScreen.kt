@@ -20,6 +20,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.proyectomoviles.model.Producto
+import com.example.proyectomoviles.utils.formatPrice
 import com.example.proyectomoviles.viewmodel.ProductViewModel
 
 @Composable
@@ -80,7 +81,6 @@ fun ProductCard(producto: Producto, onClick: () -> Unit) {
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                // Descripción corta para la tarjeta
                 Text(
                     text = producto.descripcion.take(80) + "...",
                     style = MaterialTheme.typography.bodyMedium
@@ -97,7 +97,7 @@ fun ProductCard(producto: Producto, onClick: () -> Unit) {
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = "$${producto.precio}",
+                        text = formatPrice(producto.precio),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )

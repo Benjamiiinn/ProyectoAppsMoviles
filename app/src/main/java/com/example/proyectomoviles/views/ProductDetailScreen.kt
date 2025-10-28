@@ -7,12 +7,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.proyectomoviles.utils.formatPrice
 import com.example.proyectomoviles.viewmodel.CartViewModel
 import com.example.proyectomoviles.viewmodel.ProductViewModel
 
@@ -63,17 +65,28 @@ fun ProductDetailScreen(
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "$${producto.precio}",
+                    text = formatPrice(producto.precio),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
             }
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Stock disponible: ${producto.stock} unidades",
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (producto.stock > 0) Color.Unspecified else Color.Red
+            )
             Spacer(modifier = Modifier.weight(1.0f)) // Empuja el botón hacia abajo
             Button(
                 onClick = { cartViewModel.addToCart(producto) },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = producto.stock > 0
             ) {
-                Text(text = "Añadir al Carrito")
+                if (producto.stock > 0) {
+                    Text(text = "Añadir al Carrito")
+                } else {
+                    Text(text = "Sin Stock")
+                }
             }
         }
     } else {

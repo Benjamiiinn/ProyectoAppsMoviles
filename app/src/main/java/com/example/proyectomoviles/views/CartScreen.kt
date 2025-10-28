@@ -17,12 +17,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.proyectomoviles.model.CartItem
+import com.example.proyectomoviles.utils.formatPrice
 import com.example.proyectomoviles.viewmodel.CartViewModel
 
 @Composable
 fun CartScreen(cartViewModel: CartViewModel, navController: NavController) {
     val cartItems by cartViewModel.cartItems.collectAsState()
-    // El total ahora se calcula multiplicando el precio por la cantidad de cada ítem
     val total = cartItems.sumOf { it.producto.precio * it.quantity }
 
     Column(
@@ -52,7 +52,7 @@ fun CartScreen(cartViewModel: CartViewModel, navController: NavController) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Total:", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-                Text(String.format("$%.2f", total), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Text(formatPrice(total), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             }
             Spacer(modifier = Modifier.height(16.dp))
             Button(
@@ -84,7 +84,7 @@ fun CartItemRow(
     ) {
         Column(modifier = Modifier.weight(0.4f)) {
             Text(item.producto.nombre, fontWeight = FontWeight.Bold)
-            Text(String.format("$%.2f", item.producto.precio))
+            Text(formatPrice(item.producto.precio))
         }
         
         Row(

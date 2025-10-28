@@ -17,17 +17,26 @@ class CartViewModel : ViewModel() {
         _cartItems.update { currentItems ->
             val existingItem = currentItems.find { it.producto.id == producto.id }
             if (existingItem != null) {
-                // Si el producto ya existe, incrementamos su cantidad
-                currentItems.map {
-                    if (it.producto.id == producto.id) {
-                        it.copy(quantity = it.quantity + 1)
-                    } else {
-                        it
+                // Si el producto ya existe y la cantidad es menor que el stock, incrementamos
+                if (existingItem.quantity < producto.stock) {
+                    currentItems.map {
+                        if (it.producto.id == producto.id) {
+                            it.copy(quantity = it.quantity + 1)
+                        } else {
+                            it
+                        }
                     }
+                } else {
+                    // Si ya se alcanzó el stock, no se hace nada
+                    currentItems
                 }
             } else {
-                // Si es un producto nuevo, lo añadimos a la lista
-                currentItems + CartItem(producto = producto)
+                // Si es un producto nuevo y hay stock, lo añadimos
+                if (producto.stock > 0) {
+                    currentItems + CartItem(producto = producto)
+                } else {
+                    currentItems
+                }
             }
         }
     }
@@ -37,10 +46,9 @@ class CartViewModel : ViewModel() {
             currentItems.mapNotNull { item ->
                 if (item.producto.id == productId) {
                     if (item.quantity > 1) {
-                        // Si la cantidad es mayor a 1, la reducimos
                         item.copy(quantity = item.quantity - 1)
                     } else {
-                        // Si es 1, eliminamos el producto del carrito
+                        // Si la cantidad es 1, eliminamos el producto
                         null
                     }
                 } else {
@@ -53,7 +61,8 @@ class CartViewModel : ViewModel() {
     fun increaseQuantity(productId: Int) {
         _cartItems.update { currentItems ->
             currentItems.map { item ->
-                if (item.producto.id == productId) {
+                // Solo incrementamos si la cantidad actual es menor que el stock del producto
+                if (item.producto.id == productId && item.quantity < item.producto.stock) {
                     item.copy(quantity = item.quantity + 1)
                 } else {
                     item
