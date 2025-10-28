@@ -1,5 +1,6 @@
 package com.example.proyectomoviles.views
 
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -42,7 +43,7 @@ fun AddProductScreen(navController: NavController) {
             onValueChange = { precio = it },
             label = { Text("Precio") },
             modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberDecimal)
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal) // <-- ¡CORREGIDO!
         )
         Spacer(modifier = Modifier.height(8.dp))
 
