@@ -13,6 +13,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
     var nombre by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var rut by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -25,10 +26,15 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
         OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre") })
         OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") })
         OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Contraseña") })
+        OutlinedTextField(value = rut, onValueChange = { rut = it }, label = { Text("RUT") })
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        Button(onClick = { viewModel.registrar(nombre, email, password) }) {
+        Button(onClick = {
+            if (viewModel.registrar(nombre, email, password, rut)) {
+                navController.navigate("login")
+            }
+        }) {
             Text("Registrar")
         }
 
