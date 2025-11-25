@@ -9,7 +9,7 @@ fun formatPrice(price: Double): String {
         format.maximumFractionDigits = 0 // No queremos decimales para CLP
         format.format(price)
     } catch (e: Exception) {
-        // En caso de error, devuelve un formato simple
-        "$${price.toInt()}"
+        // En caso de error, devuelve un formato simple pero claro
+        "$${price.toInt()} CLP"
     }
 }

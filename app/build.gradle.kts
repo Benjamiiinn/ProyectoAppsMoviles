@@ -1,7 +1,17 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+}
+
+// Leemos el archivo local.properties para obtener la API Key
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(FileInputStream(localPropertiesFile))
 }
 
 android {
@@ -18,6 +28,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Hacemos la API Key accesible desde el código de la app
+        buildConfigField("String", "RAWG_API_KEY", "\"${localProperties.getProperty("RAWG_API_KEY")}\"")
     }
 
     buildTypes {
@@ -38,6 +51,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true // Habilitamos la generación de BuildConfig
     }
 }
 
@@ -59,7 +73,17 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.ui.graphics)
 
+    // Retrofit for networking
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    // Gson converter for Retrofit
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    // --- Dependencias para Pruebas Unitarias ---
     testImplementation(libs.junit)
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.1") // Para probar corrutinas
+    testImplementation("androidx.arch.core:core-testing:2.2.0") // Para reglas de componentes de arquitectura
+    testImplementation("io.mockk:mockk:1.13.5") // Para crear mocks
+
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -28,7 +29,6 @@ val VaporPink = Color(0xFFEA39B8)
 val VaporCyanText = Color(0xFF32FBE2)
 val VaporWhiteBorder = Color(0xFFDEE2E6)
 
-
 @Composable
 fun HomeScreen(
     authViewModel: AuthViewModel,
@@ -36,6 +36,8 @@ fun HomeScreen(
     navController: NavController
 ) {
     val productos = productViewModel.productos
+    val isLoading = productViewModel.isLoading
+    val errorMessage = productViewModel.errorMessage
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -74,10 +76,45 @@ fun HomeScreen(
                 color = VaporWhiteBorder
             )
 
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                items(productos) { producto ->
-                    ProductCard(producto = producto) {
-                        navController.navigate("productDetail/${producto.id}")
+            // Box para manejar los diferentes estados de la UI
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(color = VaporPink)
+                } else if (errorMessage.isNotEmpty()) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = errorMessage,
+                            color = VaporCyanText,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = { productViewModel.fetchProductos() },
+                            colors = ButtonDefaults.buttonColors(containerColor = VaporPink)
+                        ) {
+                            Text("Reintentar")
+                        }
+                    }
+                } else if (productos.isEmpty()) {
+                    Text(
+                        text = "No hay juegos disponibles en este momento.",
+                        color = VaporCyanText,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        items(productos) { producto ->
+                            ProductCard(producto = producto) {
+                                navController.navigate("productDetail/${producto.id}")
+                            }
+                        }
                     }
                 }
             }

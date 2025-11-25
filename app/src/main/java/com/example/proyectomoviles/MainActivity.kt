@@ -31,7 +31,7 @@ class MainActivity : ComponentActivity() {
             Scaffold(
                 topBar = {
                     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-                    val routesWithoutTopBar = setOf("admin", "addProducto", "register", "login")
+                    val routesWithoutTopBar = setOf("admin", "addProduct", "register", "login")
 
                     if (currentRoute !in routesWithoutTopBar) {
                         val showCartIcon = currentRoute?.startsWith("home") == true ||
@@ -72,7 +72,8 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("cart") {
                         title = "Carrito"
-                        CartScreen(cartViewModel, navController)
+                        // FIX: Añadido el authViewModel que faltaba
+                        CartScreen(authViewModel, cartViewModel, navController)
                     }
                     composable("payment") {
                         title = "Realizar Pago"
@@ -92,7 +93,8 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("addProduct") {
                         title = "Agregar Producto"
-                        AddProductScreen(navController)
+                        // FIX: Añadido el productViewModel que faltaba
+                        AddProductScreen(navController, productViewModel)
                     }
                 }
             }

@@ -26,7 +26,9 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.proyectomoviles.R
 import com.example.proyectomoviles.ui.theme.BackgroundDark
+import com.example.proyectomoviles.ui.theme.VaporCyanText
 import com.example.proyectomoviles.ui.theme.VaporPink
+import com.example.proyectomoviles.ui.theme.VaporWhiteBorder
 import com.example.proyectomoviles.ui.theme.outlinedTextFieldColorsCustom
 import com.example.proyectomoviles.viewmodel.AuthViewModel
 
@@ -38,6 +40,8 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+    
+    val isLoading by viewModel.isLoading
 
     val inputTextStyle = TextStyle(
         fontFamily = FontFamily.Default,
@@ -98,7 +102,8 @@ fun LoginScreen(
                         label = { Text("Email", style = labelTextStyle) },
                         modifier = Modifier.fillMaxWidth(),
                         textStyle = inputTextStyle,
-                        colors = outlinedTextFieldColorsCustom()
+                        colors = outlinedTextFieldColorsCustom(),
+                        enabled = !isLoading
                     )
                     OutlinedTextField(
                         value = password,
@@ -115,26 +120,42 @@ fun LoginScreen(
                             IconButton(onClick = {passwordVisible = !passwordVisible}){
                                 Icon(imageVector  = image, description, tint = VaporCyanText)
                             }
-                        }
+                        },
+                        enabled = !isLoading
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
 
                     Button(
                         onClick = {
-                            if (viewModel.login(email, password)) {
-                                navController.navigate("home/$email")
+                            viewModel.login(email, password) { success ->
+                                if (success) {
+                                    navController.navigate("home/$email") {
+                                        // Limpiamos la pila de navegación para que el usuario no pueda volver a la pantalla de login
+                                        popUpTo(0)
+                                    }
+                                }
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = VaporPink)
+                        colors = ButtonDefaults.buttonColors(containerColor = VaporPink),
+                        enabled = !isLoading
                     ) {
-                        Text("Entrar")
+                        if (isLoading) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White)
+                        } else {
+                            Text("Entrar")
+                        }
                     }
 
-                    Text(viewModel.mensaje.value, modifier = Modifier.padding(top = 10.dp), color = VaporCyanText)
+                    if (viewModel.mensaje.value.isNotEmpty()) {
+                        Text(viewModel.mensaje.value, modifier = Modifier.padding(top = 10.dp), color = VaporCyanText)
+                    }
                     
-                     TextButton(onClick = { navController.navigate("register") }) {
+                     TextButton(
+                         onClick = { navController.navigate("register") },
+                         enabled = !isLoading
+                     ) {
                         Text("¿No tienes cuenta? Regístrate", color = VaporCyanText)
                     }
                 }
