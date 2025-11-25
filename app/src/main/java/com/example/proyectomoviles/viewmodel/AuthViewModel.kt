@@ -63,6 +63,22 @@ class AuthViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Valida que la contraseña tenga al menos 8 caracteres, una mayúscula y un número.
+     */
+    private fun validarPassword(password: String): Pair<Boolean, String> {
+        if (password.length < 8) {
+            return Pair(false, "La contraseña debe tener al menos 8 caracteres.")
+        }
+        if (!password.any { it.isUpperCase() }) {
+            return Pair(false, "La contraseña debe contener al menos una mayúscula.")
+        }
+        if (!password.any { it.isDigit() }) {
+            return Pair(false, "La contraseña debe contener al menos un número.")
+        }
+        return Pair(true, "")
+    }
+
     fun registrar(nombre: String, email: String, password: String, rut: String, onResult: (Boolean) -> Unit) {
         if (nombre.isBlank() || email.isBlank() || password.isBlank() || rut.isBlank()) {
             mensaje.value = "Todos los campos son obligatorios"
@@ -76,6 +92,13 @@ class AuthViewModel : ViewModel() {
         }
         if (!validarRut(rut)) {
             mensaje.value = "RUT inválido"
+            onResult(false)
+            return
+        }
+
+        val (esPasswordValido, mensajeErrorPassword) = validarPassword(password)
+        if (!esPasswordValido) {
+            mensaje.value = mensajeErrorPassword
             onResult(false)
             return
         }
