@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
@@ -26,10 +27,17 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             val authViewModel: AuthViewModel = viewModel()
             val productViewModel: ProductViewModel = viewModel()
-            val cartViewModel: CartViewModel = viewModel()
+            val cartViewModel: CartViewModel = viewModel(factory = object : ViewModelProvider.Factory {
+                override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                    return CartViewModel(productViewModel) as T
+                }
+            })
             val ordersViewModel: OrdersViewModel = viewModel()
 
-            var title by remember { mutableStateOf("Login") } // Default title
+            // --- BYPASS TEMPORAL ELIMINADO ---
+            // Volvemos al flujo de autenticación normal.
+
+            var title by remember { mutableStateOf("Login") }D
 
             Scaffold(
                 topBar = {
@@ -44,13 +52,14 @@ class MainActivity : ComponentActivity() {
 
                         if (showCartIcon) {
                             MiTopBar(title, cartViewModel, navController)
-                        }
+    S                    }
                     }
                 }
             ) { innerPadding ->
                 NavHost(
                     navController = navController,
-                    startDestination = "login", // Start at login screen
+                    // Se establece 'login' como punto de partida.
+                    startDestination = "login",
                     modifier = Modifier.padding(innerPadding)
                 ) {
                     composable("register") {

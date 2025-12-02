@@ -30,6 +30,11 @@ val VaporError = Color(0xFFE44C55)
 
 val VaporWhiteBorder = Color(0xFFDEE2E6)
 
+// --- Colores añadidos para acciones ---
+val VaporGreen = Color(0xFF28A745) // Un verde vibrante para "Éxito" o "Editar"
+val VaporRed = Color(0xFFDC3545)   // Un rojo estándar para "Error" o "Eliminar"
+
+
 @Composable
 fun outlinedTextFieldColorsCustom(): TextFieldColors {
     return OutlinedTextFieldDefaults.colors(

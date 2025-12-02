@@ -1,6 +1,5 @@
 package com.example.proyectomoviles.viewmodel
 
-import android.util.Patterns
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,19 +10,25 @@ import com.example.proyectomoviles.remote.RetrofitClient
 import com.example.proyectomoviles.utils.TokenManager
 import kotlinx.coroutines.launch
 import java.io.IOException
+import java.util.regex.Pattern
 
-class AuthViewModel : ViewModel() {
+class AuthViewModel(private val apiService: AuthAPIService = RetrofitClient.instance.create(AuthAPIService::class.java)) : ViewModel() {
 
     var mensaje = mutableStateOf("")
     var usuarioActual = mutableStateOf<String?>(null)
     var isLoading = mutableStateOf(false)
 
-    private val apiService: AuthAPIService by lazy {
-        RetrofitClient.instance.create(AuthAPIService::class.java)
-    }
-
     private fun validarEmail(email: String): Boolean {
-        return Patterns.EMAIL_ADDRESS.matcher(email).matches()
+        val emailRegex = Pattern.compile(
+            "[a-zA-Z0-9\\+\\.\\_\\%\\-\\+]{1,256}" +
+            "\\@" +
+            "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}" +
+            "(" +
+            "\\." +
+            "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,25}" +
+            ")+"
+        )
+        return emailRegex.matcher(email).matches()
     }
 
     fun isAdmin(): Boolean {

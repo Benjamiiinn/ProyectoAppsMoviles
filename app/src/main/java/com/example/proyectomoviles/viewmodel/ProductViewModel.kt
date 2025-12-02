@@ -17,7 +17,6 @@ import kotlin.random.Random
 
 class ProductViewModel : ViewModel() {
 
-    // --- Estados para la lista de productos (HomeScreen) ---
     var productos by mutableStateOf<List<Producto>>(emptyList())
         private set
     var isLoading by mutableStateOf(false)
@@ -25,7 +24,6 @@ class ProductViewModel : ViewModel() {
     var errorMessage by mutableStateOf("")
         private set
 
-    // --- Estados para el detalle de un producto (ProductDetailScreen) ---
     var selectedProduct by mutableStateOf<Producto?>(null)
         private set
     var detailsIsLoading by mutableStateOf(false)
@@ -66,12 +64,30 @@ class ProductViewModel : ViewModel() {
             try {
                 val response = apiService.getGameDetails(id = productId, apiKey = BuildConfig.RAWG_API_KEY)
                 if (response.isSuccessful && response.body() != null) {
-                    selectedProduct = mapToProducto(response.body()!!)
+                    val gameDetails = response.body()!!
+                    val existingProduct = productos.find { it.id == productId }
+
+                    if (existingProduct != null) {
+                        val descriptionToSet = if (existingProduct.descripcion.isNotBlank()) {
+                            existingProduct.descripcion
+                        } else {
+                            gameDetails.description_raw
+                        }
+                        
+                        val updatedProduct = existingProduct.copy(descripcion = descriptionToSet)
+                        selectedProduct = updatedProduct
+
+                        productos = productos.map { if (it.id == productId) updatedProduct else it }
+                    } else {
+                        val newProduct = mapToProducto(gameDetails)
+                        productos = listOf(newProduct) + productos
+                        selectedProduct = newProduct
+                    }
                 } else {
-                    // Manejar error si no se encuentran los detalles
+                    // Manejar error
                 }
             } catch (e: Exception) {
-                // Manejar error de red
+                // Manejar error
             } finally {
                 detailsIsLoading = false
             }
@@ -82,11 +98,37 @@ class ProductViewModel : ViewModel() {
         productos = listOf(newProduct) + productos
     }
 
+    fun editProduct(updatedProduct: Producto) {
+        productos = productos.map {
+            if (it.id == updatedProduct.id) updatedProduct else it
+        }
+    }
+
+    fun deleteProduct(productId: Int) {
+        productos = productos.filterNot { it.id == productId }
+    }
+
+    fun decreaseStock(productId: Int, quantity: Int): Boolean {
+        val product = productos.find { it.id == productId }
+        if (product != null && product.stock >= quantity) {
+            updateStock(productId, product.stock - quantity)
+            return true
+        }
+        return false
+    }
+
+    fun increaseStock(productId: Int, quantity: Int) {
+        val product = productos.find { it.id == productId }
+        if (product != null) {
+            updateStock(productId, product.stock + quantity)
+        }
+    }
+
     private fun mapToProducto(game: GameFromApi): Producto {
         return Producto(
             id = game.id,
             nombre = game.name,
-            descripcion = "", // La descripción real se cargará en la pantalla de detalles
+            descripcion = "",
             precio = Random.nextDouble(19.99, 69.99) * 950,
             stock = Random.nextInt(5, 50),
             plataforma = "Multiplataforma",
@@ -98,7 +140,7 @@ class ProductViewModel : ViewModel() {
         return Producto(
             id = game.id,
             nombre = game.name,
-            descripcion = game.description_raw, // Usamos la descripción completa de la API
+            descripcion = game.description_raw,
             precio = Random.nextDouble(19.99, 69.99) * 950, 
             stock = Random.nextInt(5, 50),
             plataforma = "Multiplataforma",
@@ -107,13 +149,20 @@ class ProductViewModel : ViewModel() {
     }
 
     fun updateStock(productId: Int, newStock: Int) {
+        var updatedProduct: Producto? = null
         val updatedList = productos.map {
             if (it.id == productId) {
-                it.copy(stock = newStock)
+                val product = it.copy(stock = newStock)
+                updatedProduct = product
+                product
             } else {
                 it
             }
         }
         productos = updatedList
+
+        if (selectedProduct?.id == productId) {
+            selectedProduct = updatedProduct
+        }
     }
 }

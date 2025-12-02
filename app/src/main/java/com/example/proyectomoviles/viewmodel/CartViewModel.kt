@@ -7,14 +7,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.proyectomoviles.model.CartItem
 import com.example.proyectomoviles.model.Producto
-import com.example.proyectomoviles.remote.AddToCartRequest
 import com.example.proyectomoviles.remote.CartAPIService
 import com.example.proyectomoviles.remote.RetrofitClient
-import com.example.proyectomoviles.remote.UpdateQuantityRequest
 import kotlinx.coroutines.launch
-import java.io.IOException
 
-class CartViewModel : ViewModel() {
+class CartViewModel(private val productViewModel: ProductViewModel) : ViewModel() {
 
     var cartItems by mutableStateOf<List<CartItem>>(emptyList())
         private set
@@ -28,7 +25,6 @@ class CartViewModel : ViewModel() {
     var errorMessage by mutableStateOf("")
         private set
 
-    // FIX: Exponemos públicamente el ID del usuario actual de forma segura
     var currentUserId: String? by mutableStateOf(null)
         private set
 
@@ -38,23 +34,7 @@ class CartViewModel : ViewModel() {
 
     fun loadCart(userId: String) {
         if (userId.isBlank()) return
-        if (userId == currentUserId && cartItems.isNotEmpty()) return
-
         currentUserId = userId
-        isLoading = true
-        errorMessage = ""
-
-        viewModelScope.launch {
-            // Simulamos la carga para el desarrollo sin backend
-            try {
-                // Simulación de carga (puedes añadir un delay si quieres)
-                // cartItems = emptyList() // Opcional: limpiar antes de cargar
-            } catch (e: Exception) {
-                errorMessage = "Ocurrió un error inesperado."
-            } finally {
-                isLoading = false
-            }
-        }
     }
 
     fun addToCart(producto: Producto) {
@@ -62,41 +42,67 @@ class CartViewModel : ViewModel() {
         if (existingItem != null) {
             increaseQuantity(producto.id)
         } else {
-            cartItems = cartItems + CartItem(producto, 1)
-        }
-    }
-
-    fun increaseQuantity(productId: Int) {
-        cartItems = cartItems.map {
-            if (it.producto.id == productId && it.quantity < it.producto.stock) {
-                it.copy(quantity = it.quantity + 1)
-            } else it
-        }
-    }
-
-    fun decreaseQuantity(productId: Int) {
-        cartItems = cartItems.mapNotNull {
-            if (it.producto.id == productId) {
-                if (it.quantity > 1) it.copy(quantity = it.quantity - 1) else null
-            } else {
-                it
+            if (productViewModel.decreaseStock(producto.id, 1)) {
+                val updatedProduct = productViewModel.productos.find { it.id == producto.id }
+                updatedProduct?.let { cartItems = cartItems + CartItem(it, 1) }
             }
         }
     }
 
+    fun increaseQuantity(productId: Int) {
+        val item = cartItems.find { it.producto.id == productId }
+        if (item != null && productViewModel.decreaseStock(productId, 1)) {
+            val updatedProduct = productViewModel.productos.find { it.id == productId }
+            updatedProduct?.let {
+                cartItems = cartItems.map {
+                    if (it.producto.id == productId) {
+                        it.copy(quantity = it.quantity + 1, producto = updatedProduct)
+                    } else it
+                }
+            }
+        }
+    }
+
+    fun decreaseQuantity(productId: Int) {
+        val item = cartItems.find { it.producto.id == productId }
+        if (item != null) {
+            productViewModel.increaseStock(productId, 1)
+            val updatedProduct = productViewModel.productos.find { it.id == productId }
+            updatedProduct?.let {
+                cartItems = cartItems.mapNotNull {
+                    if (it.producto.id == productId) {
+                        if (it.quantity > 1) it.copy(quantity = it.quantity - 1, producto = updatedProduct) else null
+                    } else {
+                        it
+                    }
+                }
+            }
+        }
+    }
+
+
     fun removeFromCart(productId: Int) {
-        cartItems = cartItems.filterNot { it.producto.id == productId }
+        val item = cartItems.find { it.producto.id == productId }
+        if (item != null) {
+            productViewModel.increaseStock(productId, item.quantity)
+            cartItems = cartItems.filterNot { it.producto.id == productId }
+        }
     }
 
     fun checkout(onResult: (Boolean) -> Unit) {
         isLoading = true
         viewModelScope.launch {
             try {
+                // Lógica de pago...
                 lastSuccessfulOrder = cartItems
                 cartItems = emptyList()
                 onResult(true)
             } catch (e: Exception) {
                 errorMessage = "Error inesperado durante el pago."
+                // Devolver el stock si el pago falla
+                lastSuccessfulOrder.forEach { item ->
+                    productViewModel.increaseStock(item.producto.id, item.quantity)
+                }
                 onResult(false)
             } finally {
                 isLoading = false
