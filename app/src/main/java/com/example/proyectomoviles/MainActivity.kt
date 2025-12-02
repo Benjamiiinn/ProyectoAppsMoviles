@@ -37,7 +37,7 @@ class MainActivity : ComponentActivity() {
             // --- BYPASS TEMPORAL ELIMINADO ---
             // Volvemos al flujo de autenticación normal.
 
-            var title by remember { mutableStateOf("Login") }D
+            var title by remember { mutableStateOf("Login") }
 
             Scaffold(
                 topBar = {
@@ -52,7 +52,7 @@ class MainActivity : ComponentActivity() {
 
                         if (showCartIcon) {
                             MiTopBar(title, cartViewModel, navController)
-    S                    }
+                        }
                     }
                 }
             ) { innerPadding ->
