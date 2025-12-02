@@ -19,7 +19,7 @@ import androidx.navigation.NavController
 import com.example.proyectomoviles.model.Producto
 import com.example.proyectomoviles.ui.theme.*
 import com.example.proyectomoviles.viewmodel.ProductViewModel
-
+//abeja
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminScreen(productViewModel: ProductViewModel = viewModel(), navController: NavController) {
