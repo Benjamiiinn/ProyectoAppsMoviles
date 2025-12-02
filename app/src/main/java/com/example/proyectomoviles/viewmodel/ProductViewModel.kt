@@ -17,7 +17,6 @@ import kotlin.random.Random
 
 class ProductViewModel : ViewModel() {
 
-    // --- Estados para la lista de productos (HomeScreen) ---
     var productos by mutableStateOf<List<Producto>>(emptyList())
         private set
     var isLoading by mutableStateOf(false)
@@ -25,7 +24,6 @@ class ProductViewModel : ViewModel() {
     var errorMessage by mutableStateOf("")
         private set
 
-    // --- Estados para el detalle de un producto (ProductDetailScreen) ---
     var selectedProduct by mutableStateOf<Producto?>(null)
         private set
     var detailsIsLoading by mutableStateOf(false)
@@ -66,7 +64,17 @@ class ProductViewModel : ViewModel() {
             try {
                 val response = apiService.getGameDetails(id = productId, apiKey = BuildConfig.RAWG_API_KEY)
                 if (response.isSuccessful && response.body() != null) {
-                    selectedProduct = mapToProducto(response.body()!!)
+                    val gameDetails = response.body()!!
+                    // Encontrar el producto existente en la lista para mantener la consistencia del stock y el precio
+                    val existingProduct = productos.find { it.id == productId }
+
+                    if (existingProduct != null) {
+                        // Actualizar solo la descripción, manteniendo el stock y precio originales
+                        selectedProduct = existingProduct.copy(descripcion = gameDetails.description_raw)
+                    } else {
+                        // Si no existe (caso raro), mapearlo con datos aleatorios como fallback
+                        selectedProduct = mapToProducto(gameDetails)
+                    }
                 } else {
                     // Manejar error si no se encuentran los detalles
                 }
@@ -80,6 +88,22 @@ class ProductViewModel : ViewModel() {
 
     fun addProduct(newProduct: Producto) {
         productos = listOf(newProduct) + productos
+    }
+
+    fun decreaseStock(productId: Int, quantity: Int): Boolean {
+        val product = productos.find { it.id == productId }
+        if (product != null && product.stock >= quantity) {
+            updateStock(productId, product.stock - quantity)
+            return true
+        }
+        return false
+    }
+
+    fun increaseStock(productId: Int, quantity: Int) {
+        val product = productos.find { it.id == productId }
+        if (product != null) {
+            updateStock(productId, product.stock + quantity)
+        }
     }
 
     private fun mapToProducto(game: GameFromApi): Producto {
