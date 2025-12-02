@@ -3,6 +3,7 @@ package com.example.proyectomoviles.views
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
@@ -13,13 +14,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.proyectomoviles.model.Producto
 import com.example.proyectomoviles.ui.theme.*
 import com.example.proyectomoviles.viewmodel.ProductViewModel
-//abeja
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminScreen(productViewModel: ProductViewModel = viewModel(), navController: NavController) {
@@ -66,7 +68,7 @@ fun AdminScreen(productViewModel: ProductViewModel = viewModel(), navController:
                 )
             }
             items(productos) { producto ->
-                AdminProductCard( // Cambiado a un Card para mejor estructura
+                AdminProductCard(
                     producto = producto,
                     onEditClick = {
                         productoToEdit = it
@@ -76,7 +78,7 @@ fun AdminScreen(productViewModel: ProductViewModel = viewModel(), navController:
                         showDeleteConfirm = it
                     }
                 )
-                Divider(color = VaporWhiteBorder.copy(alpha = 0.2f))
+                HorizontalDivider(color = VaporWhiteBorder.copy(alpha = 0.2f)) // Corregido: Renombrado a HorizontalDivider
             }
         }
     }
@@ -87,8 +89,11 @@ fun AdminScreen(productViewModel: ProductViewModel = viewModel(), navController:
             producto = productoToEdit!!,
             onDismiss = { showEditDialog = false },
             onConfirm = { updatedProduct ->
-                productViewModel.editProduct(updatedProduct)
-                showEditDialog = false
+                productViewModel.editProduct(updatedProduct) { success ->
+                    if (success) {
+                        showEditDialog = false
+                    }
+                }
             }
         )
     }
@@ -102,8 +107,11 @@ fun AdminScreen(productViewModel: ProductViewModel = viewModel(), navController:
             confirmButton = {
                 Button(
                     onClick = { 
-                        productViewModel.deleteProduct(showDeleteConfirm!!.id)
-                        showDeleteConfirm = null 
+                        productViewModel.deleteProduct(showDeleteConfirm!!.id) { success ->
+                            if (success) {
+                                showDeleteConfirm = null
+                            }
+                        } 
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = VaporPink)
                 ) {
@@ -180,14 +188,16 @@ fun EditProductDialog(producto: Producto, onDismiss: () -> Unit, onConfirm: (Pro
                 )
                 OutlinedTextField(
                     value = precio,
-                    onValueChange = { precio = it },
+                    onValueChange = { precio = it.filter { c -> c.isDigit() } }, // Acepta solo dígitos
                     label = { Text("Precio") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), // Teclado numérico
                     colors = outlinedTextFieldColorsCustom()
                 )
                 OutlinedTextField(
                     value = stock,
-                    onValueChange = { stock = it },
+                    onValueChange = { stock = it.filter { c -> c.isDigit() } },
                     label = { Text("Stock") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     colors = outlinedTextFieldColorsCustom()
                 )
             }
@@ -198,7 +208,7 @@ fun EditProductDialog(producto: Producto, onDismiss: () -> Unit, onConfirm: (Pro
                     val updatedProduct = producto.copy(
                         nombre = nombre,
                         descripcion = descripcion,
-                        precio = precio.toDoubleOrNull() ?: producto.precio,
+                        precio = precio.toIntOrNull() ?: producto.precio, // CORREGIDO: Convertir a Int
                         stock = stock.toIntOrNull() ?: producto.stock
                     )
                     onConfirm(updatedProduct)

@@ -4,12 +4,8 @@ import java.text.NumberFormat
 import java.util.Locale
 
 fun formatPrice(price: Double): String {
-    return try {
-        val format = NumberFormat.getCurrencyInstance(Locale("es", "CL"))
-        format.maximumFractionDigits = 0 // No queremos decimales para CLP
-        format.format(price)
-    } catch (e: Exception) {
-        // En caso de error, devuelve un formato simple pero claro
-        "$${price.toInt()} CLP"
-    }
+    // Usamos el Builder para crear la Locale, que es el método moderno y recomendado.
+    val locale = Locale.Builder().setLanguage("es").setRegion("CL").build()
+    val currencyFormat = NumberFormat.getCurrencyInstance(locale)
+    return currencyFormat.format(price)
 }

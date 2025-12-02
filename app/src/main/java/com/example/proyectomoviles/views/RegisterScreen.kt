@@ -4,6 +4,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -29,7 +31,6 @@ import com.example.proyectomoviles.ui.theme.BackgroundDark
 import com.example.proyectomoviles.ui.theme.VaporCyanText
 import com.example.proyectomoviles.ui.theme.VaporPink
 import com.example.proyectomoviles.ui.theme.VaporWhiteBorder
-import com.example.proyectomoviles.ui.theme.outlinedTextFieldColorsCustom
 import com.example.proyectomoviles.viewmodel.AuthViewModel
 
 @Composable
@@ -38,19 +39,21 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var rut by remember { mutableStateOf("") }
+    var telefono by remember { mutableStateOf("") }
+    var direccion by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
     val isLoading by viewModel.isLoading
+    val (messageText, isError) = viewModel.mensaje.value
 
-    val inputTextStyle = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontSize = 16.sp,
-        fontWeight = FontWeight.Normal
-    )
-
-    val labelTextStyle = TextStyle(
-        fontFamily = FontFamily.Default,
-        fontSize = 14.sp
+    val customTextFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = VaporPink,
+        unfocusedBorderColor = VaporWhiteBorder,
+        focusedLabelColor = VaporPink,
+        unfocusedLabelColor = VaporWhiteBorder,
+        cursorColor = VaporCyanText,
+        focusedTextColor = VaporWhiteBorder,
+        unfocusedTextColor = VaporWhiteBorder
     )
 
     Surface(
@@ -60,31 +63,22 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(20.dp),
+                .padding(20.dp)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Image(
                 painter = painterResource(id = R.drawable.vortex_logo),
                 contentDescription = "Logo",
-                modifier = Modifier
-                    .height(150.dp)
-                    .padding(bottom = 20.dp),
+                modifier = Modifier.height(120.dp).padding(bottom = 20.dp),
                 contentScale = ContentScale.Fit
             )
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(
-                        BorderStroke(
-                            width = 1.dp,
-                            color = VaporWhiteBorder
-                        ),
-                        shape = CardDefaults.shape
-                    ),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF6F42C1)
-                ),
+                    .border(BorderStroke(1.dp, VaporWhiteBorder), shape = CardDefaults.shape),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF6F42C1)),
                 shape = CardDefaults.shape
             ) {
                 Column(
@@ -92,65 +86,39 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text("Regístrate", style = MaterialTheme.typography.titleLarge.copy(color = VaporWhiteBorder))
-
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    OutlinedTextField(
-                        value = nombre,
-                        onValueChange = { nombre = it },
-                        label = { Text("Nombre", style = labelTextStyle) },
-                        modifier = Modifier.fillMaxWidth(),
-                        textStyle = inputTextStyle,
-                        colors = outlinedTextFieldColorsCustom(),
-                        enabled = !isLoading
-                    )
-
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
-                        label = { Text("Email", style = labelTextStyle) },
-                        modifier = Modifier.fillMaxWidth(),
-                        textStyle = inputTextStyle,
-                        colors = outlinedTextFieldColorsCustom(),
-                        enabled = !isLoading
-                    )
-
+                    OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre") }, modifier = Modifier.fillMaxWidth(), colors = customTextFieldColors, enabled = !isLoading)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") }, modifier = Modifier.fillMaxWidth(), colors = customTextFieldColors, enabled = !isLoading)
+                    Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
-                        label = { Text("Contraseña", style = labelTextStyle) },
+                        label = { Text("Contraseña") },
                         modifier = Modifier.fillMaxWidth(),
-                        textStyle = inputTextStyle,
-                        colors = outlinedTextFieldColorsCustom(),
+                        colors = customTextFieldColors,
                         visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         trailingIcon = {
                             val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                            val description = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña"
-
                             IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                Icon(imageVector = image, description, tint = VaporCyanText)
+                                Icon(imageVector = image, null, tint = VaporCyanText)
                             }
                         },
                         enabled = !isLoading
                     )
-
-                    OutlinedTextField(
-                        value = rut,
-                        onValueChange = { rut = it },
-                        label = { Text("RUT", style = labelTextStyle) },
-                        modifier = Modifier.fillMaxWidth(),
-                        textStyle = inputTextStyle,
-                        colors = outlinedTextFieldColorsCustom(),
-                        enabled = !isLoading
-                    )
-
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(value = rut, onValueChange = { rut = it }, label = { Text("RUT") }, modifier = Modifier.fillMaxWidth(), colors = customTextFieldColors, enabled = !isLoading)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(value = telefono, onValueChange = { telefono = it }, label = { Text("Teléfono") }, modifier = Modifier.fillMaxWidth(), colors = customTextFieldColors, enabled = !isLoading)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(value = direccion, onValueChange = { direccion = it }, label = { Text("Dirección") }, modifier = Modifier.fillMaxWidth(), colors = customTextFieldColors, enabled = !isLoading)
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Button(
                         onClick = {
-                            viewModel.registrar(nombre, email, password, rut) { success ->
+                            viewModel.registrar(nombre, email, password, rut, telefono, direccion) { success ->
                                 if (success) {
-                                    // Vuelve a la pantalla de login si el registro es exitoso
                                     navController.popBackStack()
                                 }
                             }
@@ -166,8 +134,8 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                         }
                     }
 
-                    if (viewModel.mensaje.value.isNotEmpty()) {
-                        Text(viewModel.mensaje.value, modifier = Modifier.padding(top = 10.dp), color = VaporCyanText)
+                    if (messageText.isNotEmpty()) {
+                        Text(text = messageText, modifier = Modifier.padding(top = 10.dp), color = if (isError) Color.Red else VaporCyanText)
                     }
 
                     TextButton(onClick = { navController.popBackStack() }, enabled = !isLoading) {
@@ -176,13 +144,5 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                 }
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun RegisterScreenPreview() {
-    Surface(color = BackgroundDark) {
-        RegisterScreen(navController = rememberNavController(), viewModel = AuthViewModel())
     }
 }

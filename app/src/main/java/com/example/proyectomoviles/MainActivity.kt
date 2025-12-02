@@ -7,11 +7,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
+import com.example.proyectomoviles.ui.news.NovedadesScreen
 import com.example.proyectomoviles.viewmodel.AuthViewModel
 import com.example.proyectomoviles.viewmodel.CartViewModel
 import com.example.proyectomoviles.viewmodel.OrdersViewModel
@@ -27,38 +27,33 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             val authViewModel: AuthViewModel = viewModel()
             val productViewModel: ProductViewModel = viewModel()
-            val cartViewModel: CartViewModel = viewModel(factory = object : ViewModelProvider.Factory {
-                override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-                    return CartViewModel(productViewModel) as T
-                }
-            })
+            val cartViewModel: CartViewModel = viewModel()
             val ordersViewModel: OrdersViewModel = viewModel()
 
-            // --- BYPASS TEMPORAL ELIMINADO ---
-            // Volvemos al flujo de autenticación normal.
+            // La conexión entre ViewModels ya no es necesaria
 
-            var title by remember { mutableStateOf("Login") }D
+            var title by remember { mutableStateOf("Login") }
 
             Scaffold(
                 topBar = {
                     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-                    val routesWithoutTopBar = setOf("admin", "addProduct", "register", "login", "orders", "confirmation")
+                    val routesWithoutTopBar = setOf("admin", "addProduct", "register", "login", "orders", "confirmation", "profile")
 
                     if (currentRoute !in routesWithoutTopBar) {
                         val showCartIcon = currentRoute?.startsWith("home") == true ||
                             currentRoute?.startsWith("productDetail") == true ||
                             currentRoute == "cart" ||
-                            currentRoute == "payment"
+                            currentRoute == "payment" ||
+                            currentRoute == "novedades"
 
                         if (showCartIcon) {
                             MiTopBar(title, cartViewModel, navController)
-    S                    }
+                        }
                     }
                 }
             ) { innerPadding ->
                 NavHost(
                     navController = navController,
-                    // Se establece 'login' como punto de partida.
                     startDestination = "login",
                     modifier = Modifier.padding(innerPadding)
                 ) {
@@ -73,6 +68,14 @@ class MainActivity : ComponentActivity() {
                     composable("home/{email}") { backStackEntry ->
                         title = "Inicio"
                         HomeScreen(authViewModel, productViewModel, navController)
+                    }
+                    composable("novedades") {
+                        title = "Novedades"
+                        NovedadesScreen()
+                    }
+                    composable("profile") {
+                        title = "Mi Perfil"
+                        ProfileScreen(navController, authViewModel)
                     }
                     composable(
                         "productDetail/{productId}",
@@ -104,7 +107,7 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("addProduct") {
                         title = "Agregar Producto"
-                        AddProductScreen(navController)
+                        AddProductScreen(navController, productViewModel)
                     }
                     composable("orders") {
                         title = "Mis Pedidos"

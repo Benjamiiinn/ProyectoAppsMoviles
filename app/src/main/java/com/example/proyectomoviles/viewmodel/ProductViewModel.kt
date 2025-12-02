@@ -5,15 +5,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.proyectomoviles.BuildConfig
+import com.example.proyectomoviles.model.Genero
+import com.example.proyectomoviles.model.Plataforma
 import com.example.proyectomoviles.model.Producto
-import com.example.proyectomoviles.remote.GameDetailFromApi
-import com.example.proyectomoviles.remote.GameFromApi
-import com.example.proyectomoviles.remote.RAWGApiService
-import com.example.proyectomoviles.remote.RAWGRetrofitClient
+import com.example.proyectomoviles.remote.CreateProductRequest
+import com.example.proyectomoviles.remote.ProductAPIService
+import com.example.proyectomoviles.remote.RetrofitClient
+import com.example.proyectomoviles.remote.UpdateProductRequest
 import kotlinx.coroutines.launch
-import java.io.IOException
-import kotlin.random.Random
 
 class ProductViewModel : ViewModel() {
 
@@ -24,145 +23,131 @@ class ProductViewModel : ViewModel() {
     var errorMessage by mutableStateOf("")
         private set
 
+    var generos by mutableStateOf<List<Genero>>(emptyList())
+        private set
+    var plataformas by mutableStateOf<List<Plataforma>>(emptyList())
+        private set
+    var selectedGenero by mutableStateOf<Genero?>(null)
+    var selectedPlataforma by mutableStateOf<Plataforma?>(null)
+
     var selectedProduct by mutableStateOf<Producto?>(null)
         private set
-    var detailsIsLoading by mutableStateOf(false)
-        private set
 
-    private val apiService: RAWGApiService by lazy {
-        RAWGRetrofitClient.instance.create(RAWGApiService::class.java)
+    private val apiService: ProductAPIService by lazy {
+        RetrofitClient.instance.create(ProductAPIService::class.java)
     }
 
     init {
-        fetchProductos()
+        fetchInitialData()
     }
 
-    fun fetchProductos() {
+    fun fetchInitialData() {
         isLoading = true
         errorMessage = ""
         viewModelScope.launch {
             try {
-                val response = apiService.getGames(apiKey = BuildConfig.RAWG_API_KEY)
-                if (response.isSuccessful && response.body() != null) {
-                    productos = response.body()!!.results.map { mapToProducto(it) }
-                } else {
-                    errorMessage = "Error al cargar los juegos: ${response.code()}"
+                val productsResponse = apiService.getProducts()
+                if (productsResponse.isSuccessful && productsResponse.body() != null) {
+                    productos = productsResponse.body()!!
                 }
-            } catch (e: IOException) {
-                errorMessage = "No se pudo conectar al servidor de RAWG. Revisa tu conexión."
+                val generosResponse = apiService.getGeneros()
+                if (generosResponse.isSuccessful && generosResponse.body() != null) {
+                    generos = generosResponse.body()!!
+                }
+                val plataformasResponse = apiService.getPlataformas()
+                if (plataformasResponse.isSuccessful && plataformasResponse.body() != null) {
+                    plataformas = plataformasResponse.body()!!
+                }
             } catch (e: Exception) {
-                errorMessage = "Ocurrió un error inesperado: ${e.message}"
+                errorMessage = "Error de conexión: ${e.message}"
             } finally {
                 isLoading = false
             }
         }
     }
 
-    fun fetchProductDetails(productId: Int) {
-        detailsIsLoading = true
+    fun addProduct(product: Producto, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
             try {
-                val response = apiService.getGameDetails(id = productId, apiKey = BuildConfig.RAWG_API_KEY)
-                if (response.isSuccessful && response.body() != null) {
-                    val gameDetails = response.body()!!
-                    val existingProduct = productos.find { it.id == productId }
-
-                    if (existingProduct != null) {
-                        val descriptionToSet = if (existingProduct.descripcion.isNotBlank()) {
-                            existingProduct.descripcion
-                        } else {
-                            gameDetails.description_raw
-                        }
-                        
-                        val updatedProduct = existingProduct.copy(descripcion = descriptionToSet)
-                        selectedProduct = updatedProduct
-
-                        productos = productos.map { if (it.id == productId) updatedProduct else it }
-                    } else {
-                        val newProduct = mapToProducto(gameDetails)
-                        productos = listOf(newProduct) + productos
-                        selectedProduct = newProduct
-                    }
+                val request = CreateProductRequest(
+                    nombre = product.nombre,
+                    descripcion = product.descripcion,
+                    precio = product.precio,
+                    stock = product.stock,
+                    imagenUrl = product.imagenUrl,
+                    plataformaId = product.plataforma.id,
+                    generoId = product.genero.id
+                )
+                val response = apiService.createProduct(request)
+                if (response.isSuccessful) {
+                    fetchInitialData()
+                    onResult(true)
                 } else {
-                    // Manejar error
+                    onResult(false)
                 }
             } catch (e: Exception) {
-                // Manejar error
-            } finally {
-                detailsIsLoading = false
+                onResult(false)
+            }
+        }
+    }
+    
+    fun editProduct(product: Producto, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                 val request = UpdateProductRequest(
+                    nombre = product.nombre,
+                    descripcion = product.descripcion,
+                    precio = product.precio,
+                    stock = product.stock
+                )
+                val response = apiService.updateProduct(product.id, request)
+                if (response.isSuccessful) {
+                    fetchInitialData()
+                    onResult(true)
+                } else {
+                    onResult(false)
+                }
+            } catch (e: Exception) {
+                onResult(false)
             }
         }
     }
 
-    fun addProduct(newProduct: Producto) {
-        productos = listOf(newProduct) + productos
-    }
-
-    fun editProduct(updatedProduct: Producto) {
-        productos = productos.map {
-            if (it.id == updatedProduct.id) updatedProduct else it
-        }
-    }
-
-    fun deleteProduct(productId: Int) {
-        productos = productos.filterNot { it.id == productId }
-    }
-
-    fun decreaseStock(productId: Int, quantity: Int): Boolean {
-        val product = productos.find { it.id == productId }
-        if (product != null && product.stock >= quantity) {
-            updateStock(productId, product.stock - quantity)
-            return true
-        }
-        return false
-    }
-
-    fun increaseStock(productId: Int, quantity: Int) {
-        val product = productos.find { it.id == productId }
-        if (product != null) {
-            updateStock(productId, product.stock + quantity)
-        }
-    }
-
-    private fun mapToProducto(game: GameFromApi): Producto {
-        return Producto(
-            id = game.id,
-            nombre = game.name,
-            descripcion = "",
-            precio = Random.nextDouble(19.99, 69.99) * 950,
-            stock = Random.nextInt(5, 50),
-            plataforma = "Multiplataforma",
-            imagenUrl = game.background_image ?: ""
-        )
-    }
-
-    private fun mapToProducto(game: GameDetailFromApi): Producto {
-        return Producto(
-            id = game.id,
-            nombre = game.name,
-            descripcion = game.description_raw,
-            precio = Random.nextDouble(19.99, 69.99) * 950, 
-            stock = Random.nextInt(5, 50),
-            plataforma = "Multiplataforma",
-            imagenUrl = game.background_image ?: ""
-        )
-    }
-
-    fun updateStock(productId: Int, newStock: Int) {
-        var updatedProduct: Producto? = null
-        val updatedList = productos.map {
-            if (it.id == productId) {
-                val product = it.copy(stock = newStock)
-                updatedProduct = product
-                product
-            } else {
-                it
+    fun deleteProduct(productId: Int, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val response = apiService.deleteProduct(productId)
+                if (response.isSuccessful) {
+                    fetchInitialData()
+                    onResult(true)
+                } else {
+                    onResult(false)
+                }
+            } catch (e: Exception) {
+                onResult(false)
             }
         }
-        productos = updatedList
+    }
 
-        if (selectedProduct?.id == productId) {
-            selectedProduct = updatedProduct
+    fun onGeneroSelected(genero: Genero?) {
+        selectedGenero = genero
+    }
+
+    fun onPlataformaSelected(plataforma: Plataforma?) {
+        selectedPlataforma = plataforma
+    }
+
+    fun clearFilters() {
+        selectedGenero = null
+        selectedPlataforma = null
+    }
+
+    fun getFilteredProducts(): List<Producto> {
+        return productos.filter {
+            val product = it
+            val matchesGenero = selectedGenero?.let { filterGenero -> product.genero.id == filterGenero.id } ?: true
+            val matchesPlataforma = selectedPlataforma?.let { filterPlataforma -> product.plataforma.id == filterPlataforma.id } ?: true
+            matchesGenero && matchesPlataforma
         }
     }
 }

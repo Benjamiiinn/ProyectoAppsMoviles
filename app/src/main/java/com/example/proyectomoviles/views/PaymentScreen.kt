@@ -24,7 +24,8 @@ import com.example.proyectomoviles.viewmodel.CartViewModel
 fun PaymentScreen(cartViewModel: CartViewModel, navController: NavController) {
     val cartItems = cartViewModel.cartItems
     val isLoading = cartViewModel.isLoading
-    val total = cartItems.sumOf { it.producto.precio * it.quantity }
+    // CORREGIDO: Hacemos el cálculo en Double para que coincida con formatPrice
+    val total = cartItems.sumOf { it.producto.precio.toDouble() * it.quantity }
 
     val paymentOptions = listOf("Tarjeta de Crédito/Débito", "PayPal", "Transferencia Bancaria")
     var selectedOption by remember { mutableStateOf(paymentOptions[0]) }
@@ -67,7 +68,7 @@ fun PaymentScreen(cartViewModel: CartViewModel, navController: NavController) {
                     Text(formatPrice(total), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = VaporWhiteBorder)
                 }
 
-                Divider(modifier = Modifier.padding(vertical = 24.dp), color = VaporWhiteBorder.copy(alpha = 0.5f))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 24.dp), color = VaporWhiteBorder.copy(alpha = 0.5f))
 
                 Text("Selecciona tu Método de Pago", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = VaporWhiteBorder)
                 Spacer(modifier = Modifier.height(16.dp))

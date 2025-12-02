@@ -9,16 +9,13 @@ import com.example.proyectomoviles.model.Order
 import com.example.proyectomoviles.remote.OrderAPIService
 import com.example.proyectomoviles.remote.RetrofitClient
 import kotlinx.coroutines.launch
-import java.io.IOException
 
 class OrdersViewModel : ViewModel() {
 
     var orders by mutableStateOf<List<Order>>(emptyList())
         private set
-
     var isLoading by mutableStateOf(false)
         private set
-
     var errorMessage by mutableStateOf("")
         private set
 
@@ -26,10 +23,7 @@ class OrdersViewModel : ViewModel() {
         RetrofitClient.instance.create(OrderAPIService::class.java)
     }
 
-    fun loadOrders(userId: String) {
-        // Evita recargas innecesarias si el usuario no ha cambiado o está vacío
-        if (userId.isBlank()) return
-
+    fun fetchOrders(userId: String) {
         isLoading = true
         errorMessage = ""
         viewModelScope.launch {
@@ -38,13 +32,10 @@ class OrdersViewModel : ViewModel() {
                 if (response.isSuccessful && response.body() != null) {
                     orders = response.body()!!
                 } else {
-                    errorMessage = "Error al cargar el historial de pedidos: ${response.message()}"
-                    orders = emptyList()
+                    errorMessage = "Error al cargar los pedidos."
                 }
-            } catch (e: IOException) {
-                errorMessage = "Error de conexión al cargar los pedidos."
             } catch (e: Exception) {
-                errorMessage = "Ocurrió un error inesperado al cargar los pedidos."
+                errorMessage = "Error de conexión: ${e.message}"
             } finally {
                 isLoading = false
             }

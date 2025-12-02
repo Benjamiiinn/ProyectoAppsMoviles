@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.proyectomoviles.model.Genero
+import com.example.proyectomoviles.model.Plataforma
 import com.example.proyectomoviles.model.Producto
 import com.example.proyectomoviles.ui.theme.BackgroundDark
 import com.example.proyectomoviles.ui.theme.outlinedTextFieldColorsCustom
@@ -37,19 +39,12 @@ fun HomeScreen(
     productViewModel: ProductViewModel = viewModel(),
     navController: NavController
 ) {
-    val productos = productViewModel.productos
     val isLoading = productViewModel.isLoading
     val errorMessage = productViewModel.errorMessage
 
     var searchQuery by remember { mutableStateOf("") }
-
-    // La lógica de filtrado ahora solo depende de la búsqueda por texto
-    val filteredProductos = remember(searchQuery, productos) {
-        if (searchQuery.isBlank()) {
-            productos
-        } else {
-            productos.filter { it.nombre.contains(searchQuery, ignoreCase = true) }
-        }
+    val filteredProductos = productViewModel.getFilteredProducts().filter {
+        it.nombre.contains(searchQuery, ignoreCase = true)
     }
 
     Surface(
@@ -63,30 +58,33 @@ fun HomeScreen(
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Bienvenido, ${authViewModel.usuarioActual.value}",
+                    text = "Bienvenido, ${authViewModel.usuarioActual.value?.nombre}",
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.weight(1f),
                     color = VaporCyanText
                 )
-                Button(
-                    onClick = { navController.navigate("orders") },
+                 Button(
+                    onClick = { navController.navigate("profile") },
                     colors = ButtonDefaults.buttonColors(containerColor = VaporCyanText),
                     modifier = Modifier.padding(start = 8.dp)
                 ) {
-                    Text("Mis Pedidos", color = BackgroundDark)
+                    Text("Mi Perfil", color = BackgroundDark)
                 }
-                if (authViewModel.isAdmin()) {
-                    Button(
-                        onClick = { navController.navigate("admin") },
-                        colors = ButtonDefaults.buttonColors(containerColor = VaporPink),
-                        modifier = Modifier.padding(start = 8.dp)
-                    ) {
-                        Text("Administrar")
-                    }
+                Button(
+                    onClick = {
+                        authViewModel.logout()
+                        navController.navigate("login") {
+                            popUpTo(0)
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                    modifier = Modifier.padding(start = 8.dp)
+                ) {
+                    Text("Salir")
                 }
             }
 
@@ -109,6 +107,19 @@ fun HomeScreen(
                 singleLine = true
             )
 
+            // --- Sección de Filtros ---
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                FilterDropdown(productViewModel.generos, productViewModel.selectedGenero, { productViewModel.onGeneroSelected(it) }, "Género", { it.nombre }, Modifier.weight(1f))
+                FilterDropdown(productViewModel.plataformas, productViewModel.selectedPlataforma, { productViewModel.onPlataformaSelected(it) }, "Plataforma", { it.nombre }, Modifier.weight(1f))
+                Button(onClick = { productViewModel.clearFilters() }) {
+                    Text("Limpiar")
+                }
+            }
+
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -119,13 +130,13 @@ fun HomeScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(text = errorMessage, color = VaporCyanText, textAlign = TextAlign.Center)
                         Spacer(modifier = Modifier.height(16.dp))
-                        Button(onClick = { productViewModel.fetchProductos() }, colors = ButtonDefaults.buttonColors(containerColor = VaporPink)) {
+                        Button(onClick = { /* Lógica para reintentar */ }, colors = ButtonDefaults.buttonColors(containerColor = VaporPink)) {
                             Text("Reintentar")
                         }
                     }
                 } else if (filteredProductos.isEmpty()) {
                     Text(
-                        text = if (searchQuery.isNotBlank()) "No se encontraron resultados para \"$searchQuery\"" else "No hay juegos disponibles.",
+                        text = if (searchQuery.isNotBlank() || productViewModel.selectedGenero != null || productViewModel.selectedPlataforma != null) "No se encontraron resultados." else "No hay juegos disponibles.",
                         color = VaporCyanText,
                         style = MaterialTheme.typography.bodyLarge
                     )
@@ -141,6 +152,37 @@ fun HomeScreen(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun <T> FilterDropdown(items: List<T>, selectedItem: T?, onItemSelected: (T?) -> Unit, label: String, nameExtractor: (T) -> String, modifier: Modifier = Modifier) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }, modifier = modifier) {
+        OutlinedTextField(
+            value = (selectedItem?.let(nameExtractor) ?: "Todos"),
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(label) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            modifier = Modifier.menuAnchor().fillMaxWidth(),
+            colors = outlinedTextFieldColorsCustom()
+        )
+
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            DropdownMenuItem(text = { Text("Todos") }, onClick = { onItemSelected(null); expanded = false })
+            items.forEach { item ->
+                DropdownMenuItem(
+                    text = { Text(nameExtractor(item)) },
+                    onClick = { 
+                        onItemSelected(item)
+                        expanded = false 
+                    }
+                )
             }
         }
     }
@@ -166,16 +208,15 @@ fun ProductCard(producto: Producto, onClick: () -> Unit) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(text = producto.nombre, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = VaporWhiteBorder)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(text = producto.descripcion.take(80) + "...", style = MaterialTheme.typography.bodyMedium, color = VaporCyanText)
-                Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = producto.plataforma, style = MaterialTheme.typography.bodySmall, color = VaporPink)
-                    Text(text = formatPrice(producto.precio), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = VaporWhiteBorder)
+                    Text(text = producto.genero.nombre, style = MaterialTheme.typography.bodySmall, color = VaporCyanText)
+                    Text(text = producto.plataforma.nombre, style = MaterialTheme.typography.bodySmall, color = VaporPink)
                 }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(text = formatPrice(producto.precio.toDouble()), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = VaporWhiteBorder, modifier = Modifier.align(Alignment.End))
             }
         }
     }

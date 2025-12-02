@@ -40,8 +40,9 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-    
+
     val isLoading by viewModel.isLoading
+    val (messageText, isError) = viewModel.mensaje.value
 
     val inputTextStyle = TextStyle(
         fontFamily = FontFamily.Default,
@@ -148,8 +149,12 @@ fun LoginScreen(
                         }
                     }
 
-                    if (viewModel.mensaje.value.isNotEmpty()) {
-                        Text(viewModel.mensaje.value, modifier = Modifier.padding(top = 10.dp), color = VaporCyanText)
+                    if (messageText.isNotEmpty()) {
+                        Text(
+                            text = messageText,
+                            modifier = Modifier.padding(top = 10.dp),
+                            color = if (isError) Color.Red else VaporCyanText
+                        )
                     }
                     
                      TextButton(

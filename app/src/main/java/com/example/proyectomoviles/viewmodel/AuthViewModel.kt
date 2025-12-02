@@ -1,140 +1,73 @@
 package com.example.proyectomoviles.viewmodel
 
+import android.util.Patterns
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.proyectomoviles.model.Usuario
 import com.example.proyectomoviles.remote.AuthAPIService
 import com.example.proyectomoviles.remote.LoginRequest
 import com.example.proyectomoviles.remote.RegisterRequest
 import com.example.proyectomoviles.remote.RetrofitClient
 import com.example.proyectomoviles.utils.TokenManager
 import kotlinx.coroutines.launch
-import java.io.IOException
-import java.util.regex.Pattern
 
-class AuthViewModel(private val apiService: AuthAPIService = RetrofitClient.instance.create(AuthAPIService::class.java)) : ViewModel() {
+class AuthViewModel : ViewModel() {
 
-    var mensaje = mutableStateOf("")
-    var usuarioActual = mutableStateOf<String?>(null)
+    var mensaje = mutableStateOf<Pair<String, Boolean>>(Pair("", false))
+    var usuarioActual = mutableStateOf<Usuario?>(null)
     var isLoading = mutableStateOf(false)
 
-    private fun validarEmail(email: String): Boolean {
-        val emailRegex = Pattern.compile(
-            "[a-zA-Z0-9\\+\\.\\_\\%\\-\\+]{1,256}" +
-            "\\@" +
-            "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}" +
-            "(" +
-            "\\." +
-            "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,25}" +
-            ")+"
+    private val apiService: AuthAPIService by lazy {
+        RetrofitClient.instance.create(AuthAPIService::class.java)
+    }
+
+    init {
+        if (TokenManager.isLoggedIn()) {
+            loadUserProfile()
+        }
+    }
+
+    fun loadUserProfile() {
+        usuarioActual.value = Usuario(
+            id = TokenManager.getUserId(),
+            nombre = TokenManager.getUserName() ?: "",
+            email = TokenManager.getUserEmail() ?: "",
+            rut = TokenManager.getUserRut() ?: "",
+            telefono = TokenManager.getUserTelefono(),
+            direccion = TokenManager.getUserDireccion()
         )
-        return emailRegex.matcher(email).matches()
     }
 
-    fun isAdmin(): Boolean {
-        return usuarioActual.value == "admin@tienda.com"
+    // FUNCIÓN RESTAURADA
+    fun updateUser(name: String, rut: String, telefono: String?, direccion: String?, onResult: (Boolean) -> Unit) {
+        val currentToken = TokenManager.getToken() ?: return
+        val currentUserId = TokenManager.getUserId()
+        val currentEmail = TokenManager.getUserEmail() ?: return
+
+        // TODO: En el futuro, aquí deberías llamar a un endpoint de tu API para actualizar el perfil.
+        // Por ahora, actualizamos la información localmente en SharedPreferences.
+        TokenManager.saveAuthInfo(currentToken, currentUserId, name, currentEmail, rut, telefono, direccion)
+        loadUserProfile() // Recargamos el perfil para que la UI se actualice
+        onResult(true)
     }
 
-    fun validarRut(rut: String): Boolean {
-        try {
-            var rutLimpio = rut.uppercase().replace(".", "").replace("-", "")
-            if (rutLimpio.length < 2) return false
-            val dv = rutLimpio.last()
-            val cuerpo = rutLimpio.substring(0, rutLimpio.length - 1)
-
-            if (!cuerpo.matches(Regex("[0-9]+"))) return false
-
-            var suma = 0
-            var multiplo = 2
-            for (i in cuerpo.length - 1 downTo 0) {
-                suma += cuerpo[i].toString().toInt() * multiplo
-                multiplo++
-                if (multiplo > 7) {
-                    multiplo = 2
-                }
-            }
-
-            val resto = suma % 11
-            val dvCalculado = 11 - resto
-
-            val dvFinal = when (dvCalculado) {
-                11 -> '0'
-                10 -> 'K'
-                else -> dvCalculado.toString().first()
-            }
-
-            return dv == dvFinal
-        } catch (e: Exception) {
-            return false
-        }
-    }
-
-    /**
-     * Valida que la contraseña tenga al menos 8 caracteres, una mayúscula y un número.
-     */
-    private fun validarPassword(password: String): Pair<Boolean, String> {
-        if (password.length < 8) {
-            return Pair(false, "La contraseña debe tener al menos 8 caracteres.")
-        }
-        if (!password.any { it.isUpperCase() }) {
-            return Pair(false, "La contraseña debe contener al menos una mayúscula.")
-        }
-        if (!password.any { it.isDigit() }) {
-            return Pair(false, "La contraseña debe contener al menos un número.")
-        }
-        return Pair(true, "")
-    }
-
-    fun registrar(nombre: String, email: String, password: String, rut: String, onResult: (Boolean) -> Unit) {
-        if (nombre.isBlank() || email.isBlank() || password.isBlank() || rut.isBlank()) {
-            mensaje.value = "Todos los campos son obligatorios"
-            onResult(false)
-            return
-        }
-        if (!validarEmail(email)) {
-            mensaje.value = "Email inválido"
-            onResult(false)
-            return
-        }
-        if (!validarRut(rut)) {
-            mensaje.value = "RUT inválido"
-            onResult(false)
-            return
-        }
-
-        val (esPasswordValido, mensajeErrorPassword) = validarPassword(password)
-        if (!esPasswordValido) {
-            mensaje.value = mensajeErrorPassword
-            onResult(false)
-            return
-        }
-
+    fun registrar(nombre: String, email: String, password: String, rut: String, telefono: String, direccion: String, onResult: (Boolean) -> Unit) {
         isLoading.value = true
-        mensaje.value = ""
-
+        mensaje.value = Pair("", false)
         viewModelScope.launch {
             try {
-                val request = RegisterRequest(nombre, email, password, rut)
+                val request = RegisterRequest(nombre, email, password, rut, telefono, direccion)
                 val response = apiService.registrar(request)
-
-                if (response.isSuccessful && response.body() != null) {
-                    val authData = response.body()!!
-
-                    // GUARDAMOS EL TOKEN Y DATOS
-                    TokenManager.saveAuthInfo(authData.token, authData.userId, authData.role)
-                    usuarioActual.value = email
-                    mensaje.value = "Registro exitoso"
+                if (response.isSuccessful) {
+                    mensaje.value = Pair("¡Registro exitoso! Ya puedes iniciar sesión.", false)
                     onResult(true)
                 } else {
-                    val errorBody = response.errorBody()?.string() ?: "Error desconocido"
-                    mensaje.value = "Error en el registro: $errorBody"
+                    mensaje.value = Pair("Error en el registro.", true)
                     onResult(false)
                 }
-            } catch (e: IOException) {
-                mensaje.value = "Error de conexión. Inténtalo de nuevo."
-                onResult(false)
             } catch (e: Exception) {
-                mensaje.value = "Ocurrió un error inesperado."
+                mensaje.value = Pair("Error de conexión.", true)
                 onResult(false)
             } finally {
                 isLoading.value = false
@@ -143,44 +76,52 @@ class AuthViewModel(private val apiService: AuthAPIService = RetrofitClient.inst
     }
 
     fun login(email: String, password: String, onResult: (Boolean) -> Unit) {
-         if (email.isBlank() || password.isBlank()) {
-            mensaje.value = "Email y contraseña son obligatorios"
-            onResult(false)
-            return
-        }
-        if (!validarEmail(email)) {
-            mensaje.value = "Formato de email inválido"
+        if (email.isBlank() || password.isBlank()) {
+            mensaje.value = Pair("Email y contraseña son obligatorios", true)
             onResult(false)
             return
         }
 
         isLoading.value = true
-        mensaje.value = ""
+        mensaje.value = Pair("", false)
 
         viewModelScope.launch {
             try {
-                val request = LoginRequest(username = email, password = password)
-                val response = apiService.login(request)
+                val loginRequest = LoginRequest(username = email, password = password)
+                val response = apiService.login(loginRequest)
 
                 if (response.isSuccessful && response.body() != null) {
-                    val authData = response.body()!!
-                    TokenManager.saveAuthInfo(authData.token, authData.userId, authData.role)
-                    usuarioActual.value = email
-                    mensaje.value = "Inicio de sesión exitoso"
+                    val authResult = response.body()!!
+                    
+                    // Como el login no devuelve los datos del usuario, los guardamos parcialmente.
+                    TokenManager.saveAuthInfo(
+                        token = authResult.token,
+                        userId = authResult.userId,
+                        name = email, // Usamos el email como nombre temporal
+                        email = email, 
+                        rut = "", // No tenemos el RUT
+                        telefono = "", // No tenemos el teléfono
+                        direccion = "" // No tenemos la dirección
+                    )
+                    
+                    loadUserProfile() // Cargar el perfil parcial que hemos guardado
+                    mensaje.value = Pair("Inicio de sesión exitoso", false)
                     onResult(true)
                 } else {
-                    mensaje.value = "Credenciales inválidas"
+                    mensaje.value = Pair("Credenciales inválidas", true)
                     onResult(false)
                 }
-            } catch (e: IOException) {
-                mensaje.value = "Error de conexión. Revisa tu conexión a internet."
-                onResult(false)
             } catch (e: Exception) {
-                mensaje.value = "Ocurrió un error inesperado."
+                mensaje.value = Pair(e.message ?: "Ocurrió un error inesperado.", true)
                 onResult(false)
             } finally {
                 isLoading.value = false
             }
         }
+    }
+
+    fun logout() {
+        TokenManager.clear()
+        usuarioActual.value = null
     }
 }

@@ -27,7 +27,8 @@ import java.util.UUID
 @Composable
 fun ConfirmationScreen(navController: NavController, cartViewModel: CartViewModel) {
     val orderItems = cartViewModel.lastSuccessfulOrder
-    val total = orderItems.sumOf { it.producto.precio * it.quantity }
+    // CORREGIDO: Hacemos el cálculo en Double para que coincida con formatPrice
+    val total = orderItems.sumOf { it.producto.precio.toDouble() * it.quantity }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -83,7 +84,7 @@ fun ConfirmationScreen(navController: NavController, cartViewModel: CartViewMode
                                 Text(downloadCode, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = VaporPink)
                                 Spacer(modifier = Modifier.height(4.dp))
                             }
-                            Divider(color = VaporWhiteBorder.copy(alpha = 0.3f))
+                            HorizontalDivider(color = VaporWhiteBorder.copy(alpha = 0.3f)) // Corregido: Renombrado a HorizontalDivider
                         }
                     }
                     
@@ -103,7 +104,7 @@ fun ConfirmationScreen(navController: NavController, cartViewModel: CartViewMode
 
             Button(
                 onClick = { 
-                    navController.navigate("home/${cartViewModel.currentUserId}") {
+                    navController.navigate("home/${cartViewModel.currentUserId}") { // Asumimos que currentUserId está disponible
                         popUpTo("home/${cartViewModel.currentUserId}") { inclusive = true }
                     }
                 },
