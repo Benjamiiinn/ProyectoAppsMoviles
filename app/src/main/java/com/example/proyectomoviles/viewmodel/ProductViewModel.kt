@@ -65,21 +65,29 @@ class ProductViewModel : ViewModel() {
                 val response = apiService.getGameDetails(id = productId, apiKey = BuildConfig.RAWG_API_KEY)
                 if (response.isSuccessful && response.body() != null) {
                     val gameDetails = response.body()!!
-                    // Encontrar el producto existente en la lista para mantener la consistencia del stock y el precio
                     val existingProduct = productos.find { it.id == productId }
 
                     if (existingProduct != null) {
-                        // Actualizar solo la descripción, manteniendo el stock y precio originales
-                        selectedProduct = existingProduct.copy(descripcion = gameDetails.description_raw)
+                        val descriptionToSet = if (existingProduct.descripcion.isNotBlank()) {
+                            existingProduct.descripcion
+                        } else {
+                            gameDetails.description_raw
+                        }
+                        
+                        val updatedProduct = existingProduct.copy(descripcion = descriptionToSet)
+                        selectedProduct = updatedProduct
+
+                        productos = productos.map { if (it.id == productId) updatedProduct else it }
                     } else {
-                        // Si no existe (caso raro), mapearlo con datos aleatorios como fallback
-                        selectedProduct = mapToProducto(gameDetails)
+                        val newProduct = mapToProducto(gameDetails)
+                        productos = listOf(newProduct) + productos
+                        selectedProduct = newProduct
                     }
                 } else {
-                    // Manejar error si no se encuentran los detalles
+                    // Manejar error
                 }
             } catch (e: Exception) {
-                // Manejar error de red
+                // Manejar error
             } finally {
                 detailsIsLoading = false
             }
@@ -88,6 +96,16 @@ class ProductViewModel : ViewModel() {
 
     fun addProduct(newProduct: Producto) {
         productos = listOf(newProduct) + productos
+    }
+
+    fun editProduct(updatedProduct: Producto) {
+        productos = productos.map {
+            if (it.id == updatedProduct.id) updatedProduct else it
+        }
+    }
+
+    fun deleteProduct(productId: Int) {
+        productos = productos.filterNot { it.id == productId }
     }
 
     fun decreaseStock(productId: Int, quantity: Int): Boolean {
@@ -110,7 +128,7 @@ class ProductViewModel : ViewModel() {
         return Producto(
             id = game.id,
             nombre = game.name,
-            descripcion = "", // La descripción real se cargará en la pantalla de detalles
+            descripcion = "",
             precio = Random.nextDouble(19.99, 69.99) * 950,
             stock = Random.nextInt(5, 50),
             plataforma = "Multiplataforma",
@@ -122,7 +140,7 @@ class ProductViewModel : ViewModel() {
         return Producto(
             id = game.id,
             nombre = game.name,
-            descripcion = game.description_raw, // Usamos la descripción completa de la API
+            descripcion = game.description_raw,
             precio = Random.nextDouble(19.99, 69.99) * 950, 
             stock = Random.nextInt(5, 50),
             plataforma = "Multiplataforma",
@@ -131,13 +149,20 @@ class ProductViewModel : ViewModel() {
     }
 
     fun updateStock(productId: Int, newStock: Int) {
+        var updatedProduct: Producto? = null
         val updatedList = productos.map {
             if (it.id == productId) {
-                it.copy(stock = newStock)
+                val product = it.copy(stock = newStock)
+                updatedProduct = product
+                product
             } else {
                 it
             }
         }
         productos = updatedList
+
+        if (selectedProduct?.id == productId) {
+            selectedProduct = updatedProduct
+        }
     }
 }

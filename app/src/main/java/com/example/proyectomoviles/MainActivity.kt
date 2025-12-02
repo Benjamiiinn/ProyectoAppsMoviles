@@ -57,7 +57,7 @@ class MainActivity : ComponentActivity() {
             ) { innerPadding ->
                 NavHost(
                     navController = navController,
-                    // Se establece 'login' como punto de partida para usuarios existentes.
+                    // Se establece 'login' como punto de partida.
                     startDestination = "login",
                     modifier = Modifier.padding(innerPadding)
                 ) {
