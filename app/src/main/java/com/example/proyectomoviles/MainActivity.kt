@@ -22,6 +22,7 @@ import com.example.proyectomoviles.views.*
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        com.example.proyectomoviles.utils.TokenManager.init(applicationContext)
         setContent {
             val navController = rememberNavController()
             val authViewModel: AuthViewModel = viewModel()
@@ -36,7 +37,7 @@ class MainActivity : ComponentActivity() {
             // --- BYPASS TEMPORAL ELIMINADO ---
             // Volvemos al flujo de autenticación normal.
 
-            var title by remember { mutableStateOf("Login") }
+            var title by remember { mutableStateOf("Login") }D
 
             Scaffold(
                 topBar = {
@@ -51,7 +52,7 @@ class MainActivity : ComponentActivity() {
 
                         if (showCartIcon) {
                             MiTopBar(title, cartViewModel, navController)
-                        }
+    S                    }
                     }
                 }
             ) { innerPadding ->
@@ -103,7 +104,7 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("addProduct") {
                         title = "Agregar Producto"
-                        AddProductScreen(navController, productViewModel)
+                        AddProductScreen(navController)
                     }
                     composable("orders") {
                         title = "Mis Pedidos"

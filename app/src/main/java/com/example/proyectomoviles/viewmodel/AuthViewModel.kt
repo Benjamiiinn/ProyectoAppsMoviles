@@ -7,6 +7,7 @@ import com.example.proyectomoviles.remote.AuthAPIService
 import com.example.proyectomoviles.remote.LoginRequest
 import com.example.proyectomoviles.remote.RegisterRequest
 import com.example.proyectomoviles.remote.RetrofitClient
+import com.example.proyectomoviles.utils.TokenManager
 import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.regex.Pattern
@@ -36,7 +37,7 @@ class AuthViewModel(private val apiService: AuthAPIService = RetrofitClient.inst
 
     fun validarRut(rut: String): Boolean {
         try {
-            var rutLimpio = rut.toUpperCase().replace(".", "").replace("-", "")
+            var rutLimpio = rut.uppercase().replace(".", "").replace("-", "")
             if (rutLimpio.length < 2) return false
             val dv = rutLimpio.last()
             val cuerpo = rutLimpio.substring(0, rutLimpio.length - 1)
@@ -116,7 +117,12 @@ class AuthViewModel(private val apiService: AuthAPIService = RetrofitClient.inst
                 val request = RegisterRequest(nombre, email, password, rut)
                 val response = apiService.registrar(request)
 
-                if (response.isSuccessful) {
+                if (response.isSuccessful && response.body() != null) {
+                    val authData = response.body()!!
+
+                    // GUARDAMOS EL TOKEN Y DATOS
+                    TokenManager.saveAuthInfo(authData.token, authData.userId, authData.role)
+                    usuarioActual.value = email
                     mensaje.value = "Registro exitoso"
                     onResult(true)
                 } else {
@@ -153,12 +159,13 @@ class AuthViewModel(private val apiService: AuthAPIService = RetrofitClient.inst
 
         viewModelScope.launch {
             try {
-                val request = LoginRequest(email, password)
+                val request = LoginRequest(username = email, password = password)
                 val response = apiService.login(request)
 
                 if (response.isSuccessful && response.body() != null) {
-                    val authResponse = response.body()!!
-                    usuarioActual.value = authResponse.user.email
+                    val authData = response.body()!!
+                    TokenManager.saveAuthInfo(authData.token, authData.userId, authData.role)
+                    usuarioActual.value = email
                     mensaje.value = "Inicio de sesión exitoso"
                     onResult(true)
                 } else {
