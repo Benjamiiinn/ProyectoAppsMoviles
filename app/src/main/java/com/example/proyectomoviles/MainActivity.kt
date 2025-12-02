@@ -28,17 +28,15 @@ class MainActivity : ComponentActivity() {
             val cartViewModel: CartViewModel = viewModel()
             val ordersViewModel: OrdersViewModel = viewModel()
 
-            // --- INICIO DEL BYPASS TEMPORAL ---
-            val testUserEmail = "test@usuario.com"
-            authViewModel.usuarioActual.value = testUserEmail
-            // --- FIN DEL BYPASS TEMPORAL ---
+            // --- BYPASS TEMPORAL ELIMINADO ---
+            // Volvemos al flujo de autenticación normal.
 
             var title by remember { mutableStateOf("Registro") }
 
             Scaffold(
                 topBar = {
                     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-                    val routesWithoutTopBar = setOf("admin", "addProduct", "register", "login", "orders", "confirmation") // Añadimos confirmation
+                    val routesWithoutTopBar = setOf("admin", "addProduct", "register", "login", "orders", "confirmation")
 
                     if (currentRoute !in routesWithoutTopBar) {
                         val showCartIcon = currentRoute?.startsWith("home") == true ||
@@ -54,7 +52,8 @@ class MainActivity : ComponentActivity() {
             ) { innerPadding ->
                 NavHost(
                     navController = navController,
-                    startDestination = "home/$testUserEmail",
+                    // Se restaura el punto de partida original.
+                    startDestination = "register",
                     modifier = Modifier.padding(innerPadding)
                 ) {
                     composable("register") {
@@ -87,7 +86,6 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("confirmation") {
                         title = "Compra Completada"
-                        // FIX: Pasamos el cartViewModel a la pantalla de confirmación
                         ConfirmationScreen(navController, cartViewModel)
                     }
                     composable("purchaseError") {

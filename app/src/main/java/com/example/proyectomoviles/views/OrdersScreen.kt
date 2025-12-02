@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember // FIX: Import faltante
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,7 +41,6 @@ fun OrdersScreen(
     val errorMessage = ordersViewModel.errorMessage
     val currentUserId = authViewModel.usuarioActual.value
 
-    // Carga los pedidos para el usuario actual cuando la pantalla se muestra
     LaunchedEffect(currentUserId) {
         currentUserId?.let {
             ordersViewModel.loadOrders(it)
@@ -137,7 +137,6 @@ fun OrderCard(order: Order) {
             }
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Detalle de los productos en el pedido
             order.items.forEach {
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Text("• ${it.quantity}x ", color = VaporCyanText)
