@@ -4,10 +4,10 @@ import android.util.Patterns
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.proyectomoviles.remote.AuthAPIService
+import com.example.proyectomoviles.remote.UserAPIService
 import com.example.proyectomoviles.remote.LoginRequest
 import com.example.proyectomoviles.remote.RegisterRequest
-import com.example.proyectomoviles.remote.RetrofitClient
+import com.example.proyectomoviles.remote.FakeUserAPIService
 import kotlinx.coroutines.launch
 import java.io.IOException
 
@@ -17,8 +17,8 @@ class AuthViewModel : ViewModel() {
     var usuarioActual = mutableStateOf<String?>(null)
     var isLoading = mutableStateOf(false)
 
-    private val apiService: AuthAPIService by lazy {
-        RetrofitClient.instance.create(AuthAPIService::class.java)
+    private val apiService: UserAPIService by lazy {
+        FakeUserAPIService()
     }
 
     private fun validarEmail(email: String): Boolean {
@@ -63,9 +63,6 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Valida que la contraseña tenga al menos 8 caracteres, una mayúscula y un número.
-     */
     private fun validarPassword(password: String): Pair<Boolean, String> {
         if (password.length < 8) {
             return Pair(false, "La contraseña debe tener al menos 8 caracteres.")
@@ -109,7 +106,7 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val request = RegisterRequest(nombre, email, password, rut)
-                val response = apiService.registrar(request)
+                val response = apiService.register(request)
 
                 if (response.isSuccessful) {
                     mensaje.value = "Registro exitoso"
@@ -152,8 +149,8 @@ class AuthViewModel : ViewModel() {
                 val response = apiService.login(request)
 
                 if (response.isSuccessful && response.body() != null) {
-                    val authResponse = response.body()!!
-                    usuarioActual.value = authResponse.user.email
+                    val user = response.body()!!
+                    usuarioActual.value = user.email
                     mensaje.value = "Inicio de sesión exitoso"
                     onResult(true)
                 } else {
