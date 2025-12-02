@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -32,7 +31,6 @@ val VaporPink = Color(0xFFEA39B8)
 val VaporCyanText = Color(0xFF32FBE2)
 val VaporWhiteBorder = Color(0xFFDEE2E6)
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     authViewModel: AuthViewModel,
@@ -44,23 +42,13 @@ fun HomeScreen(
     val errorMessage = productViewModel.errorMessage
 
     var searchQuery by remember { mutableStateOf("") }
-    var selectedPlatform by remember { mutableStateOf<String?>(null) }
 
-    val platforms = listOf("PC", "PlayStation", "Xbox")
-
-    val filteredProductos = remember(searchQuery, selectedPlatform, productos) {
-        productos.filter {
-            val matchesSearch = if (searchQuery.isNotBlank()) {
-                it.nombre.contains(searchQuery, ignoreCase = true)
-            } else {
-                true
-            }
-            val matchesPlatform = if (selectedPlatform != null) {
-                it.plataforma.equals(selectedPlatform, ignoreCase = true)
-            } else {
-                true
-            }
-            matchesSearch && matchesPlatform
+    // La lógica de filtrado ahora solo depende de la búsqueda por texto
+    val filteredProductos = remember(searchQuery, productos) {
+        if (searchQuery.isBlank()) {
+            productos
+        } else {
+            productos.filter { it.nombre.contains(searchQuery, ignoreCase = true) }
         }
     }
 
@@ -112,29 +100,14 @@ fun HomeScreen(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
                 label = { Text("Buscar juego...") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Buscar") },
                 colors = outlinedTextFieldColorsCustom(),
                 singleLine = true
             )
-
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(bottom = 16.dp)) {
-                platforms.forEach { platform ->
-                    FilterChip(
-                        selected = selectedPlatform == platform,
-                        onClick = { 
-                            selectedPlatform = if (selectedPlatform == platform) null else platform
-                        },
-                        label = { Text(platform) },
-                        leadingIcon = if (selectedPlatform == platform) {
-                            { Icon(imageVector = Icons.Filled.Done, contentDescription = "Selected") }
-                        } else {
-                            null
-                        }
-                    )
-                }
-            }
 
             Box(
                 modifier = Modifier.fillMaxSize(),
@@ -152,7 +125,7 @@ fun HomeScreen(
                     }
                 } else if (filteredProductos.isEmpty()) {
                     Text(
-                        text = if (searchQuery.isNotBlank() || selectedPlatform != null) "No se encontraron resultados." else "No hay juegos disponibles.",
+                        text = if (searchQuery.isNotBlank()) "No se encontraron resultados para \"$searchQuery\"" else "No hay juegos disponibles.",
                         color = VaporCyanText,
                         style = MaterialTheme.typography.bodyLarge
                     )

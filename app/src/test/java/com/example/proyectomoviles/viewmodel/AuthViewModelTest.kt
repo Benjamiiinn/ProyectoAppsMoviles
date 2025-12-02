@@ -31,16 +31,8 @@ class AuthViewModelTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(Dispatchers.Unconfined)
-        // Para probar la lógica de red, necesitamos inyectar el servicio mockeado en el ViewModel.
-        // Esto requiere modificar un poco el ViewModel para permitir la inyección, o usar una librería de inyección de dependencias.
-        // Por simplicidad aquí, asumiremos que podríamos inyectarlo (la implementación real se haría con Hilt o Koin).
         mockAuthApiService = mockk()
-        viewModel = AuthViewModel()
-
-        // Esto es una reflexión para "inyectar" el mock en el viewModel. No es ideal, pero sirve para la prueba.
-        val apiServiceField = viewModel.javaClass.getDeclaredField("apiService")
-        apiServiceField.isAccessible = true
-        apiServiceField.set(viewModel, mockAuthApiService)
+        viewModel = AuthViewModel(mockAuthApiService)
     }
 
     @After
