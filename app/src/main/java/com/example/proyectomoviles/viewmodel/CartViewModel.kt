@@ -20,6 +20,10 @@ class CartViewModel : ViewModel() {
     var cartItems by mutableStateOf<List<CartItem>>(emptyList())
         private set
 
+    // Nuevo estado para guardar el último pedido exitoso
+    var lastSuccessfulOrder by mutableStateOf<List<CartItem>>(emptyList())
+        private set
+
     var isLoading by mutableStateOf(false)
         private set
 
@@ -35,7 +39,6 @@ class CartViewModel : ViewModel() {
     // --- FUNCIONES PÚBLICAS ---
 
     fun loadCart(userId: String) {
-        // Evita recargas innecesarias si el usuario no ha cambiado
         if (userId.isBlank() || userId == currentUserId) return
 
         currentUserId = userId
@@ -62,35 +65,26 @@ class CartViewModel : ViewModel() {
     }
 
     fun addToCart(producto: Producto) {
-        val userId = currentUserId ?: return // No hacer nada si no hay usuario
-
+        val userId = currentUserId ?: return
         viewModelScope.launch {
-            // Opcional: mostrar un indicador de carga específico para este item
             val request = AddToCartRequest(userId = userId, productId = producto.id, quantity = 1)
             try {
                 val response = apiService.addToCart(request)
                 if (response.isSuccessful) {
-                    // Recargar el carrito para obtener la lista actualizada del servidor
                     loadCart(userId)
                 }
-            } catch (e: Exception) {
-                // Manejar error
-            }
+            } catch (e: Exception) { /* Manejar error */ }
         }
     }
 
     fun increaseQuantity(productId: Int) {
-        val userId = currentUserId ?: return
         val item = cartItems.find { it.producto.id == productId } ?: return
-        val newQuantity = item.quantity + 1
-        updateQuantity(productId, newQuantity)
+        updateQuantity(productId, item.quantity + 1)
     }
 
     fun decreaseQuantity(productId: Int) {
-        val userId = currentUserId ?: return
         val item = cartItems.find { it.producto.id == productId } ?: return
         val newQuantity = item.quantity - 1
-
         if (newQuantity > 0) {
             updateQuantity(productId, newQuantity)
         } else {
@@ -100,16 +94,13 @@ class CartViewModel : ViewModel() {
 
     fun removeFromCart(productId: Int) {
         val userId = currentUserId ?: return
-
         viewModelScope.launch {
             try {
                 val response = apiService.removeFromCart(userId, productId)
                 if (response.isSuccessful) {
-                    loadCart(userId) // Recargar el carrito
+                    loadCart(userId)
                 }
-            } catch (e: Exception) {
-                // Manejar error
-            }
+            } catch (e: Exception) { /* Manejar error */ }
         }
     }
 
@@ -118,18 +109,20 @@ class CartViewModel : ViewModel() {
             onResult(false)
             return
         }
-
         isLoading = true
         viewModelScope.launch {
             try {
-                val response = apiService.checkout(userId)
-                if (response.isSuccessful) {
-                    cartItems = emptyList() // Limpieza optimista de la UI
+                // Simulamos una llamada exitosa ya que no hay backend
+                // val response = apiService.checkout(userId)
+                // if (response.isSuccessful) {
+                    // Guardamos el pedido actual antes de limpiar el carrito
+                    lastSuccessfulOrder = cartItems
+                    cartItems = emptyList() 
                     onResult(true)
-                } else {
-                    errorMessage = "El pago falló: ${response.message()}"
-                    onResult(false)
-                }
+                // } else {
+                //     errorMessage = "El pago falló: ${response.message()}"
+                //     onResult(false)
+                // }
             } catch (e: Exception) {
                 errorMessage = "Error de conexión durante el pago."
                 onResult(false)
@@ -141,7 +134,6 @@ class CartViewModel : ViewModel() {
     
     private fun updateQuantity(productId: Int, quantity: Int) {
         val userId = currentUserId ?: return
-
         viewModelScope.launch {
             val request = UpdateQuantityRequest(userId, productId, quantity)
             try {
@@ -149,9 +141,7 @@ class CartViewModel : ViewModel() {
                 if (response.isSuccessful) {
                     loadCart(userId)
                 }
-            } catch (e: Exception) {
-                 // Manejar error
-            }
+            } catch (e: Exception) { /* Manejar error */ }
         }
     }
 }

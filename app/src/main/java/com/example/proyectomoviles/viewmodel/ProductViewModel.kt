@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.proyectomoviles.BuildConfig
 import com.example.proyectomoviles.model.Producto
+import com.example.proyectomoviles.remote.GameDetailFromApi
 import com.example.proyectomoviles.remote.GameFromApi
 import com.example.proyectomoviles.remote.RAWGApiService
 import com.example.proyectomoviles.remote.RAWGRetrofitClient
@@ -16,13 +17,18 @@ import kotlin.random.Random
 
 class ProductViewModel : ViewModel() {
 
+    // --- Estados para la lista de productos (HomeScreen) ---
     var productos by mutableStateOf<List<Producto>>(emptyList())
         private set
-
     var isLoading by mutableStateOf(false)
         private set
-
     var errorMessage by mutableStateOf("")
+        private set
+
+    // --- Estados para el detalle de un producto (ProductDetailScreen) ---
+    var selectedProduct by mutableStateOf<Producto?>(null)
+        private set
+    var detailsIsLoading by mutableStateOf(false)
         private set
 
     private val apiService: RAWGApiService by lazy {
@@ -40,10 +46,7 @@ class ProductViewModel : ViewModel() {
             try {
                 val response = apiService.getGames(apiKey = BuildConfig.RAWG_API_KEY)
                 if (response.isSuccessful && response.body() != null) {
-                    val gamesFromApi = response.body()!!.results
-                    productos = gamesFromApi.map { gameFromApi ->
-                        mapToProducto(gameFromApi)
-                    }
+                    productos = response.body()!!.results.map { mapToProducto(it) }
                 } else {
                     errorMessage = "Error al cargar los juegos: ${response.code()}"
                 }
@@ -57,21 +60,46 @@ class ProductViewModel : ViewModel() {
         }
     }
 
+    fun fetchProductDetails(productId: Int) {
+        detailsIsLoading = true
+        viewModelScope.launch {
+            try {
+                val response = apiService.getGameDetails(id = productId, apiKey = BuildConfig.RAWG_API_KEY)
+                if (response.isSuccessful && response.body() != null) {
+                    selectedProduct = mapToProducto(response.body()!!)
+                } else {
+                    // Manejar error si no se encuentran los detalles
+                }
+            } catch (e: Exception) {
+                // Manejar error de red
+            } finally {
+                detailsIsLoading = false
+            }
+        }
+    }
+
     fun addProduct(newProduct: Producto) {
         productos = listOf(newProduct) + productos
     }
 
     private fun mapToProducto(game: GameFromApi): Producto {
-        // Asumimos que los precios de la API (si los hubiera) están en USD
-        // Los convertimos a CLP con un tipo de cambio fijo.
-        val usdPrice = Random.nextDouble(19.99, 69.99) // Precio aleatorio en USD
-        val clpPrice = usdPrice * 950 // Tipo de cambio fijo (ej: 1 USD = 950 CLP)
-
         return Producto(
             id = game.id,
             nombre = game.name,
-            descripcion = "Un emocionante juego disponible en múltiples plataformas.",
-            precio = clpPrice, // Guardamos el precio en CLP
+            descripcion = "", // La descripción real se cargará en la pantalla de detalles
+            precio = Random.nextDouble(19.99, 69.99) * 950,
+            stock = Random.nextInt(5, 50),
+            plataforma = "Multiplataforma",
+            imagenUrl = game.background_image ?: ""
+        )
+    }
+
+    private fun mapToProducto(game: GameDetailFromApi): Producto {
+        return Producto(
+            id = game.id,
+            nombre = game.name,
+            descripcion = game.description_raw, // Usamos la descripción completa de la API
+            precio = Random.nextDouble(19.99, 69.99) * 950, 
             stock = Random.nextInt(5, 50),
             plataforma = "Multiplataforma",
             imagenUrl = game.background_image ?: ""

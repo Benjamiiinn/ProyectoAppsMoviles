@@ -13,6 +13,7 @@ import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.example.proyectomoviles.viewmodel.AuthViewModel
 import com.example.proyectomoviles.viewmodel.CartViewModel
+import com.example.proyectomoviles.viewmodel.OrdersViewModel
 import com.example.proyectomoviles.viewmodel.ProductViewModel
 import com.example.proyectomoviles.views.*
 
@@ -25,13 +26,19 @@ class MainActivity : ComponentActivity() {
             val authViewModel: AuthViewModel = viewModel()
             val productViewModel: ProductViewModel = viewModel()
             val cartViewModel: CartViewModel = viewModel()
+            val ordersViewModel: OrdersViewModel = viewModel()
+
+            // --- INICIO DEL BYPASS TEMPORAL ---
+            val testUserEmail = "test@usuario.com"
+            authViewModel.usuarioActual.value = testUserEmail
+            // --- FIN DEL BYPASS TEMPORAL ---
 
             var title by remember { mutableStateOf("Registro") }
 
             Scaffold(
                 topBar = {
                     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-                    val routesWithoutTopBar = setOf("admin", "addProduct", "register", "login")
+                    val routesWithoutTopBar = setOf("admin", "addProduct", "register", "login", "orders", "confirmation") // Añadimos confirmation
 
                     if (currentRoute !in routesWithoutTopBar) {
                         val showCartIcon = currentRoute?.startsWith("home") == true ||
@@ -47,7 +54,7 @@ class MainActivity : ComponentActivity() {
             ) { innerPadding ->
                 NavHost(
                     navController = navController,
-                    startDestination = "register",
+                    startDestination = "home/$testUserEmail",
                     modifier = Modifier.padding(innerPadding)
                 ) {
                     composable("register") {
@@ -72,7 +79,6 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("cart") {
                         title = "Carrito"
-                        // FIX: Añadido el authViewModel que faltaba
                         CartScreen(authViewModel, cartViewModel, navController)
                     }
                     composable("payment") {
@@ -81,7 +87,8 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("confirmation") {
                         title = "Compra Completada"
-                        ConfirmationScreen(navController)
+                        // FIX: Pasamos el cartViewModel a la pantalla de confirmación
+                        ConfirmationScreen(navController, cartViewModel)
                     }
                     composable("purchaseError") {
                         title = "Error en la Compra"
@@ -93,8 +100,11 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("addProduct") {
                         title = "Agregar Producto"
-                        // FIX: Añadido el productViewModel que faltaba
                         AddProductScreen(navController, productViewModel)
+                    }
+                    composable("orders") {
+                        title = "Mis Pedidos"
+                        OrdersScreen(navController, authViewModel, ordersViewModel)
                     }
                 }
             }

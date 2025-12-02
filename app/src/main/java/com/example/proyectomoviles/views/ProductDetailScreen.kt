@@ -6,12 +6,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -35,16 +32,20 @@ fun ProductDetailScreen(
     cartViewModel: CartViewModel = viewModel(),
     navController: NavController
 ) {
-    val productos = productViewModel.productos
-    val producto = productos.find { it.id == productId }
-
-    // 1. Añadimos el estado para el Snackbar y el scope para la corrutina
+    // Observamos los nuevos estados del ViewModel
+    val producto by remember { derivedStateOf { productViewModel.selectedProduct } }
+    val isLoading by remember { derivedStateOf { productViewModel.detailsIsLoading } }
+    
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
+    // Llamamos a la API para obtener los detalles del producto cuando la pantalla se carga
+    LaunchedEffect(productId) {
+        productViewModel.fetchProductDetails(productId)
+    }
+
     Scaffold(
         containerColor = BackgroundDark,
-        // 2. Añadimos el SnackbarHost al Scaffold
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = {
             TopAppBar(
@@ -60,13 +61,16 @@ fun ProductDetailScreen(
             )
         }
     ) { paddingValues ->
-        Surface(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            color = BackgroundDark
+            contentAlignment = Alignment.Center
         ) {
-            if (producto != null) {
+            if (isLoading) {
+                CircularProgressIndicator(color = VaporPink)
+            } else if (producto != null) {
+                // Contenido de la pantalla cuando el producto se ha cargado
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -89,6 +93,7 @@ fun ProductDetailScreen(
                         color = VaporWhiteBorder
                     )
                     Spacer(modifier = Modifier.height(8.dp))
+                    // ¡Aquí mostramos la descripción real!
                     Text(
                         text = producto.descripcion,
                         style = MaterialTheme.typography.bodyLarge,
@@ -120,7 +125,6 @@ fun ProductDetailScreen(
                     )
                     Spacer(modifier = Modifier.height(32.dp))
                     Button(
-                        // 3. Actualizamos el onClick para mostrar el Snackbar
                         onClick = {
                             cartViewModel.addToCart(producto)
                             scope.launch {
@@ -142,15 +146,11 @@ fun ProductDetailScreen(
                     }
                 }
             } else {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Producto no encontrado",
-                        color = VaporCyanText
-                    )
-                }
+                // Mensaje en caso de que el producto no se pueda cargar
+                Text(
+                    text = "No se pudieron cargar los detalles del producto.",
+                    color = VaporCyanText
+                )
             }
         }
     }
