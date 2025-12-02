@@ -3,13 +3,23 @@ package com.example.proyectomoviles.viewmodel
 import android.util.Patterns
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.example.proyectomoviles.model.FakeDatabase
-import com.example.proyectomoviles.model.Usuario
+import androidx.lifecycle.viewModelScope
+import com.example.proyectomoviles.remote.AuthAPIService
+import com.example.proyectomoviles.remote.LoginRequest
+import com.example.proyectomoviles.remote.RegisterRequest
+import com.example.proyectomoviles.remote.RetrofitClient
+import kotlinx.coroutines.launch
+import java.io.IOException
 
 class AuthViewModel : ViewModel() {
 
     var mensaje = mutableStateOf("")
     var usuarioActual = mutableStateOf<String?>(null)
+    var isLoading = mutableStateOf(false)
+
+    private val apiService: AuthAPIService by lazy {
+        RetrofitClient.instance.create(AuthAPIService::class.java)
+    }
 
     private fun validarEmail(email: String): Boolean {
         return Patterns.EMAIL_ADDRESS.matcher(email).matches()
@@ -53,65 +63,112 @@ class AuthViewModel : ViewModel() {
         }
     }
 
-    fun registrar(nombre: String, email: String, password: String, rut: String): Boolean {
-        if (nombre.isBlank()) {
-            mensaje.value = "Falta el nombre"
-            return false
+    /**
+     * Valida que la contraseña tenga al menos 8 caracteres, una mayúscula y un número.
+     */
+    private fun validarPassword(password: String): Pair<Boolean, String> {
+        if (password.length < 8) {
+            return Pair(false, "La contraseña debe tener al menos 8 caracteres.")
         }
-        if (email.isBlank()) {
-            mensaje.value = "Falta el email"
-            return false
+        if (!password.any { it.isUpperCase() }) {
+            return Pair(false, "La contraseña debe contener al menos una mayúscula.")
         }
-        if (password.isBlank()) {
-            mensaje.value = "Falta la contraseña"
-            return false
+        if (!password.any { it.isDigit() }) {
+            return Pair(false, "La contraseña debe contener al menos un número.")
         }
-        if (rut.isBlank()) {
-            mensaje.value = "Falta el RUT"
-            return false
-        }
+        return Pair(true, "")
+    }
 
+    fun registrar(nombre: String, email: String, password: String, rut: String, onResult: (Boolean) -> Unit) {
+        if (nombre.isBlank() || email.isBlank() || password.isBlank() || rut.isBlank()) {
+            mensaje.value = "Todos los campos son obligatorios"
+            onResult(false)
+            return
+        }
         if (!validarEmail(email)) {
             mensaje.value = "Email inválido"
-            return false
+            onResult(false)
+            return
         }
         if (!validarRut(rut)) {
             mensaje.value = "RUT inválido"
-            return false
+            onResult(false)
+            return
         }
 
-        val nuevo = Usuario(nombre, email, password, rut)
-        return if (FakeDatabase.registrar(nuevo)) {
-            mensaje.value = "Registro exitoso"
-            true
-        } else {
-            mensaje.value = "El usuario o RUT ya existe"
-            false
+        val (esPasswordValido, mensajeErrorPassword) = validarPassword(password)
+        if (!esPasswordValido) {
+            mensaje.value = mensajeErrorPassword
+            onResult(false)
+            return
+        }
+
+        isLoading.value = true
+        mensaje.value = ""
+
+        viewModelScope.launch {
+            try {
+                val request = RegisterRequest(nombre, email, password, rut)
+                val response = apiService.registrar(request)
+
+                if (response.isSuccessful) {
+                    mensaje.value = "Registro exitoso"
+                    onResult(true)
+                } else {
+                    val errorBody = response.errorBody()?.string() ?: "Error desconocido"
+                    mensaje.value = "Error en el registro: $errorBody"
+                    onResult(false)
+                }
+            } catch (e: IOException) {
+                mensaje.value = "Error de conexión. Inténtalo de nuevo."
+                onResult(false)
+            } catch (e: Exception) {
+                mensaje.value = "Ocurrió un error inesperado."
+                onResult(false)
+            } finally {
+                isLoading.value = false
+            }
         }
     }
 
-    fun login(email: String, password: String): Boolean {
-        if (email.isBlank()) {
-            mensaje.value = "Falta el email"
-            return false
+    fun login(email: String, password: String, onResult: (Boolean) -> Unit) {
+         if (email.isBlank() || password.isBlank()) {
+            mensaje.value = "Email y contraseña son obligatorios"
+            onResult(false)
+            return
         }
-        if (password.isBlank()) {
-            mensaje.value = "Falta la contraseña"
-            return false
+        if (!validarEmail(email)) {
+            mensaje.value = "Formato de email inválido"
+            onResult(false)
+            return
         }
 
-        if (!validarEmail(email)) {
-            mensaje.value = "Email inválido"
-            return false
-        }
-        
-        return if (FakeDatabase.login(email, password)) {
-            usuarioActual.value = email
-            mensaje.value = "Inicio de sesión exitoso"
-            true
-        } else {
-            mensaje.value = "Credenciales inválidas"
-            false
+        isLoading.value = true
+        mensaje.value = ""
+
+        viewModelScope.launch {
+            try {
+                val request = LoginRequest(email, password)
+                val response = apiService.login(request)
+
+                if (response.isSuccessful && response.body() != null) {
+                    val authResponse = response.body()!!
+                    usuarioActual.value = authResponse.user.email
+                    mensaje.value = "Inicio de sesión exitoso"
+                    onResult(true)
+                } else {
+                    mensaje.value = "Credenciales inválidas"
+                    onResult(false)
+                }
+            } catch (e: IOException) {
+                mensaje.value = "Error de conexión. Revisa tu conexión a internet."
+                onResult(false)
+            } catch (e: Exception) {
+                mensaje.value = "Ocurrió un error inesperado."
+                onResult(false)
+            } finally {
+                isLoading.value = false
+            }
         }
     }
 }

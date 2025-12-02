@@ -4,12 +4,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavController
+import com.example.proyectomoviles.ui.theme.VaporCyanText
 import com.example.proyectomoviles.ui.theme.VaporPink
 import com.example.proyectomoviles.ui.theme.VaporPurpleBorder
+import com.example.proyectomoviles.ui.theme.VaporWhiteBorder
 import com.example.proyectomoviles.viewmodel.CartViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -19,7 +19,8 @@ fun MiTopBar(
     cartViewModel: CartViewModel,
     navController: NavController
 ) {
-    val cartItems by cartViewModel.cartItems.collectAsState()
+    // FIX: Accedemos directamente a la propiedad de estado, ya no es un Flow
+    val cartItems = cartViewModel.cartItems
 
     TopAppBar(
         title = { Text(title, color = VaporWhiteBorder) },

@@ -26,10 +26,11 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.proyectomoviles.R
 import com.example.proyectomoviles.ui.theme.BackgroundDark
+import com.example.proyectomoviles.ui.theme.VaporCyanText
 import com.example.proyectomoviles.ui.theme.VaporPink
+import com.example.proyectomoviles.ui.theme.VaporWhiteBorder
 import com.example.proyectomoviles.ui.theme.outlinedTextFieldColorsCustom
 import com.example.proyectomoviles.viewmodel.AuthViewModel
-
 
 @Composable
 fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
@@ -38,6 +39,8 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
     var password by remember { mutableStateOf("") }
     var rut by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+
+    val isLoading by viewModel.isLoading
 
     val inputTextStyle = TextStyle(
         fontFamily = FontFamily.Default,
@@ -88,7 +91,7 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                     modifier = Modifier.padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Registrate", style = MaterialTheme.typography.titleLarge.copy(color = VaporWhiteBorder))
+                    Text("Regístrate", style = MaterialTheme.typography.titleLarge.copy(color = VaporWhiteBorder))
 
                     Spacer(modifier = Modifier.height(16.dp))
 
@@ -98,7 +101,8 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                         label = { Text("Nombre", style = labelTextStyle) },
                         modifier = Modifier.fillMaxWidth(),
                         textStyle = inputTextStyle,
-                        colors = outlinedTextFieldColorsCustom()
+                        colors = outlinedTextFieldColorsCustom(),
+                        enabled = !isLoading
                     )
 
                     OutlinedTextField(
@@ -107,7 +111,8 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                         label = { Text("Email", style = labelTextStyle) },
                         modifier = Modifier.fillMaxWidth(),
                         textStyle = inputTextStyle,
-                        colors = outlinedTextFieldColorsCustom()
+                        colors = outlinedTextFieldColorsCustom(),
+                        enabled = !isLoading
                     )
 
                     OutlinedTextField(
@@ -125,7 +130,8 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                             IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                 Icon(imageVector = image, description, tint = VaporCyanText)
                             }
-                        }
+                        },
+                        enabled = !isLoading
                     )
 
                     OutlinedTextField(
@@ -134,26 +140,37 @@ fun RegisterScreen(navController: NavController, viewModel: AuthViewModel) {
                         label = { Text("RUT", style = labelTextStyle) },
                         modifier = Modifier.fillMaxWidth(),
                         textStyle = inputTextStyle,
-                        colors = outlinedTextFieldColorsCustom()
+                        colors = outlinedTextFieldColorsCustom(),
+                        enabled = !isLoading
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Button(
                         onClick = {
-                            if (viewModel.registrar(nombre, email, password, rut)) {
-                                navController.navigate("login")
+                            viewModel.registrar(nombre, email, password, rut) { success ->
+                                if (success) {
+                                    // Vuelve a la pantalla de login si el registro es exitoso
+                                    navController.popBackStack()
+                                }
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = VaporPink)
+                        colors = ButtonDefaults.buttonColors(containerColor = VaporPink),
+                        enabled = !isLoading
                     ) {
-                        Text("Registrar")
+                        if (isLoading) {
+                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Color.White)
+                        } else {
+                            Text("Registrar")
+                        }
                     }
 
-                    Text(viewModel.mensaje.value, modifier = Modifier.padding(top = 10.dp), color = VaporCyanText)
+                    if (viewModel.mensaje.value.isNotEmpty()) {
+                        Text(viewModel.mensaje.value, modifier = Modifier.padding(top = 10.dp), color = VaporCyanText)
+                    }
 
-                    TextButton(onClick = { navController.navigate("login") }) {
+                    TextButton(onClick = { navController.popBackStack() }, enabled = !isLoading) {
                         Text("¿Ya tienes cuenta? Inicia sesión", color = VaporCyanText)
                     }
                 }
