@@ -5,12 +5,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.proyectomoviles.model.Genero
 import com.example.proyectomoviles.model.Plataforma
 import com.example.proyectomoviles.model.Producto
 import com.example.proyectomoviles.remote.CreateProductRequest
+import com.example.proyectomoviles.remote.GeneroId
+import com.example.proyectomoviles.remote.PlataformaId
 import com.example.proyectomoviles.remote.ProductAPIService
 import com.example.proyectomoviles.remote.RetrofitClient
 import com.example.proyectomoviles.remote.UpdateProductRequest
@@ -77,23 +78,29 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
     fun addProduct(product: Producto, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
             try {
+                val platId = product.plataforma?.id ?: return@launch onResult(false)
+                val genId = product.genero?.id ?: return@launch onResult(false)
+
                 val request = CreateProductRequest(
                     nombre = product.nombre,
                     descripcion = product.descripcion,
                     precio = product.precio,
                     stock = product.stock,
-                    imagenUrl = product.imagen,
-                    plataformaId = product.plataforma?.id ?: 0,
-                    generoId = product.genero?.id ?: 0
+                    imagen = product.imagen,
+                    plataforma = PlataformaId(platId),
+                    genero = GeneroId(genId)
                 )
                 val response = apiService.createProduct(request)
                 if (response.isSuccessful) {
                     fetchInitialData()
                     onResult(true)
                 } else {
+                    val errorBody = response.errorBody()?.string() ?: "Error desconocido"
+                    println("Error al crear producto: ${response.code()} - $errorBody")
                     onResult(false)
                 }
             } catch (e: Exception) {
+                e.printStackTrace()
                 onResult(false)
             }
         }
@@ -102,11 +109,20 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
     fun editProduct(product: Producto, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
             try {
+                val platId = product.plataforma?.id
+                val genId = product.genero?.id
+
+                val platObj = if (platId != null) PlataformaId(platId) else null
+                val genObj = if (genId != null) GeneroId(genId) else null
+
                  val request = UpdateProductRequest(
-                    nombre = product.nombre,
-                    descripcion = product.descripcion,
-                    precio = product.precio,
-                    stock = product.stock
+                     nombre = product.nombre,
+                     descripcion = product.descripcion,
+                     precio = product.precio,
+                     stock = product.stock,
+                     plataforma = platObj,
+                     genero = genObj
+
                 )
                 val response = apiService.updateProduct(product.id, request)
                 if (response.isSuccessful) {

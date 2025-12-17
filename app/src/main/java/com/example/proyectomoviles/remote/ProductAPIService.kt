@@ -3,7 +3,6 @@ package com.example.proyectomoviles.remote
 import com.example.proyectomoviles.model.Genero
 import com.example.proyectomoviles.model.Plataforma
 import com.example.proyectomoviles.model.Producto
-import com.google.gson.annotations.SerializedName
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -12,14 +11,17 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 
+data class PlataformaId(val id: Int)
+data class GeneroId(val id: Int)
+
 data class CreateProductRequest(
     val nombre: String,
     val descripcion: String,
     val precio: Int, // CORREGIDO: Cambiado a Int
     val stock: Int,
-    @SerializedName("imagen") val imagenUrl: String?,
-    @SerializedName("plataforma_id") val plataformaId: Int,
-    @SerializedName("genero_id") val generoId: Int
+    val imagen: String?,
+    val plataforma: PlataformaId,
+    val genero: GeneroId
 )
 
 // CORREGIDO: El precio ahora es un Int
@@ -27,7 +29,9 @@ data class UpdateProductRequest(
     val nombre: String,
     val descripcion: String,
     val precio: Int,
-    val stock: Int
+    val stock: Int,
+    val plataforma: PlataformaId?, // Opcional si permites editarlo
+    val genero: GeneroId?
 )
 
 interface ProductAPIService {

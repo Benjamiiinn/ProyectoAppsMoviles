@@ -7,7 +7,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
-    private const val BASE_URL = "https://backendappmovil.onrender.com/"
+    private const val BASE_URL = "http://3.90.159.162:8080/"
 
     fun getClient(context: Context): Retrofit {
         val authInterceptor = okhttp3.Interceptor { chain ->

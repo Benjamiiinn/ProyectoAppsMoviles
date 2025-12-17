@@ -1,10 +1,8 @@
 package com.example.proyectomoviles.viewmodel
 
 import android.app.Application
-import android.util.Patterns
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.proyectomoviles.model.Usuario
 import com.example.proyectomoviles.remote.AuthAPIService
@@ -57,7 +55,71 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun registrar(nombre: String, email: String, password: String, rut: String, telefono: String, direccion: String, onResult: (Boolean) -> Unit) {
-        // ... (lógica de registro)
+        isLoading.value = true
+        mensaje.value = Pair("", false)
+
+        if (nombre.isBlank() || email.isBlank() || password.isBlank() || rut.isBlank()) {
+            mensaje.value = Pair("Por favor completa los campos obligatorios", true)
+            isLoading.value = false
+            onResult(false)
+            return
+        }
+
+        val telefonoInt = try {
+            if (telefono.isBlank()) 0 else telefono.toInt()
+        } catch (e: NumberFormatException) {
+            mensaje.value = Pair("El teléfono debe ser un número válido", true)
+            isLoading.value = false
+            onResult(false)
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                // 4. Crear el objeto con el INT correcto
+                val request = RegisterRequest(
+                    nombre = nombre,
+                    email = email,
+                    password = password,
+                    rut = rut,
+                    telefono = telefonoInt,
+                    direccion = direccion
+                )
+
+                // 5. Llamada a la API
+                val response = apiService.registrar(request)
+
+                if (response.isSuccessful && response.body() != null) {
+                    val authResult = response.body()!!
+
+                    // Opcional: Autologuear al usuario recién registrado
+                    TokenManager.saveAuthInfo(
+                        token = authResult.token,
+                        userId = authResult.userId,
+                        name = nombre,
+                        email = email,
+                        rut = rut,
+                        telefono = telefono,
+                        direccion = direccion,
+                        role = authResult.role
+                    )
+                    loadUserProfile() // Actualizar estado en la app
+
+                    mensaje.value = Pair("Registro exitoso", false)
+                    onResult(true)
+                } else {
+                    // Leer el error que devuelve el backend (ej. "El email ya existe")
+                    val errorBody = response.errorBody()?.string() ?: "Error desconocido"
+                    mensaje.value = Pair("Error: $errorBody", true)
+                    onResult(false)
+                }
+            } catch (e: Exception) {
+                mensaje.value = Pair("Error de conexión: ${e.message}", true)
+                onResult(false)
+            } finally {
+                isLoading.value = false
+            }
+        }
     }
 
     fun login(email: String, password: String, onResult: (Boolean) -> Unit) {
