@@ -35,6 +35,7 @@ import com.example.proyectomoviles.model.Producto
 import com.example.proyectomoviles.ui.theme.BackgroundDark
 import com.example.proyectomoviles.ui.theme.VaporPink
 import com.example.proyectomoviles.ui.theme.VaporWhiteBorder
+import com.example.proyectomoviles.ui.theme.outlinedTextFieldColorsCustom
 import com.example.proyectomoviles.viewmodel.ProductViewModel
 import java.io.File
 import java.text.SimpleDateFormat
@@ -47,6 +48,9 @@ fun AddProductScreen(navController: NavController, productViewModel: ProductView
     var nombre by remember { mutableStateOf("") }
     var precio by remember { mutableStateOf("") }
     var descripcion by remember { mutableStateOf("") }
+    var imagenBase64 by remember { mutableStateOf("") } // Cambio de nombre para claridad
+    var plataformaId by remember { mutableStateOf("") } // Ahora pedimos ID
+    var generoId by remember { mutableStateOf("") }     // Ahora pedimos ID
     var stock by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var isSaving by remember { mutableStateOf(false) }
@@ -74,15 +78,6 @@ fun AddProductScreen(navController: NavController, productViewModel: ProductView
         selectedGenero != null && selectedPlataforma != null
     }
 
-    val customTextFieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = VaporPink,
-        unfocusedBorderColor = VaporWhiteBorder,
-        focusedLabelColor = VaporPink,
-        unfocusedLabelColor = VaporWhiteBorder,
-        cursorColor = Color(0xFF32FBE2), // VaporCyanText
-        focusedTextColor = VaporWhiteBorder,
-        unfocusedTextColor = VaporWhiteBorder
-    )
 
     Scaffold(
         containerColor = BackgroundDark,

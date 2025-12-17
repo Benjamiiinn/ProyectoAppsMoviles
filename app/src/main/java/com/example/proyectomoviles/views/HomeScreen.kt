@@ -229,7 +229,7 @@ fun ProductCard(producto: Producto, onClick: () -> Unit) {
     ) {
         Column {
             AsyncImage(
-                model = producto.imagenUrl,
+                model = producto.imagen,
                 contentDescription = "Imagen del producto ${producto.nombre}",
                 modifier = Modifier.fillMaxWidth().height(180.dp),
                 contentScale = ContentScale.Crop
@@ -241,8 +241,8 @@ fun ProductCard(producto: Producto, onClick: () -> Unit) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text(text = producto.genero.nombre, style = MaterialTheme.typography.bodySmall, color = VaporCyanText)
-                    Text(text = producto.plataforma.nombre, style = MaterialTheme.typography.bodySmall, color = VaporPink)
+                    Text(text = producto.genero?.nombre ?: "N/A", style = MaterialTheme.typography.bodySmall, color = VaporCyanText)
+                    Text(text = producto.plataforma?.nombre ?: "N/A", style = MaterialTheme.typography.bodySmall, color = VaporPink)
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(text = formatPrice(producto.precio.toDouble()), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = VaporWhiteBorder, modifier = Modifier.align(Alignment.End))

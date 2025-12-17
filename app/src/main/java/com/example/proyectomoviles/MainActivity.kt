@@ -12,6 +12,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.example.proyectomoviles.ui.news.NovedadesScreen
+import com.example.proyectomoviles.utils.TokenManager
 import com.example.proyectomoviles.viewmodel.AuthViewModel
 import com.example.proyectomoviles.viewmodel.CartViewModel
 import com.example.proyectomoviles.viewmodel.OrdersViewModel
@@ -22,7 +23,7 @@ import com.example.proyectomoviles.views.*
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        com.example.proyectomoviles.utils.TokenManager.init(applicationContext)
+        TokenManager.init(applicationContext)
         setContent {
             val navController = rememberNavController()
             val authViewModel: AuthViewModel = viewModel()
