@@ -93,8 +93,8 @@ fun ProfileScreen(navController: NavController, authViewModel: AuthViewModel) {
 
         Button(
             onClick = {
-                // Llamada actualizada para enviar solo los campos editables
-                authViewModel.updateUser(currentUser?.nombre ?: "", currentUser?.rut ?: "", telefono, direccion) { success ->
+                // CORREGIDO: La llamada ahora solo pasa los campos editables
+                authViewModel.updateUser(telefono, direccion) { success ->
                     if (success) {
                         authViewModel.mensaje.value = Pair("¡Datos actualizados con éxito!", false)
                     } else {
