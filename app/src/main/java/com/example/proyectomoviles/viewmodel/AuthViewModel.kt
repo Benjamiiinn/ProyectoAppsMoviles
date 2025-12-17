@@ -10,6 +10,7 @@ import com.example.proyectomoviles.remote.AuthAPIService
 import com.example.proyectomoviles.remote.LoginRequest
 import com.example.proyectomoviles.remote.RegisterRequest
 import com.example.proyectomoviles.remote.RetrofitClient
+import com.example.proyectomoviles.remote.UpdateProfileRequest
 import com.example.proyectomoviles.utils.TokenManager
 import kotlinx.coroutines.launch
 
@@ -49,10 +50,54 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         val currentUserId = TokenManager.getUserId()
         val currentEmail = TokenManager.getUserEmail() ?: return
 
-        // TODO: Implementar llamada a la API del backend para actualizar el perfil.
-        TokenManager.saveAuthInfo(currentToken, currentUserId, name, currentEmail, rut, telefono, direccion, TokenManager.getUserRole() ?: "USER")
-        loadUserProfile()
-        onResult(true)
+        isLoading.value = true
+
+        val telefonoInt = try {
+            if (telefono.isNullOrBlank()) 0 else telefono.toInt()
+        } catch (e: Exception) { 0 }
+
+        viewModelScope.launch {
+            try {
+                // 1. Crear objeto request
+                val request = UpdateProfileRequest(
+                    nombre = name,
+                    rut = rut,
+                    telefono = telefonoInt,
+                    direccion = direccion ?: ""
+                )
+
+                // 2. Llamar a la API
+                val response = apiService.updateUser(currentUserId, request)
+
+                if (response.isSuccessful && response.body() != null) {
+                    val updatedUser = response.body()!!
+
+                    // 3. Actualizar datos locales (TokenManager) con lo que respondió el server
+                    TokenManager.saveAuthInfo(
+                        token = currentToken,
+                        userId = updatedUser.id,
+                        name = updatedUser.nombre,
+                        email = updatedUser.email,
+                        rut = updatedUser.rut,
+                        telefono = updatedUser.telefono.toString(),
+                        direccion = updatedUser.direccion,
+                        role = TokenManager.getUserRole() ?: "CLIENTE"
+                    )
+                    loadUserProfile() // Refrescar la UI
+                    mensaje.value = Pair("Perfil actualizado correctamente", false)
+                    onResult(true)
+                } else {
+                    val error = response.errorBody()?.string() ?: "Error desconocido"
+                    mensaje.value = Pair("Error al actualizar: $error", true)
+                    onResult(false)
+                }
+            } catch (e: Exception) {
+                mensaje.value = Pair("Error de conexión", true)
+                onResult(false)
+            } finally {
+                isLoading.value = false
+            }
+        }
     }
 
     fun registrar(nombre: String, email: String, password: String, rut: String, telefono: String, direccion: String, onResult: (Boolean) -> Unit) {
