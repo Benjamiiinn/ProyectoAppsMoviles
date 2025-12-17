@@ -1,7 +1,9 @@
 package com.example.proyectomoviles.viewmodel
 
+import android.app.Application
 import android.util.Patterns
 import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.proyectomoviles.model.Usuario
@@ -12,14 +14,14 @@ import com.example.proyectomoviles.remote.RetrofitClient
 import com.example.proyectomoviles.utils.TokenManager
 import kotlinx.coroutines.launch
 
-class AuthViewModel : ViewModel() {
+class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     var mensaje = mutableStateOf<Pair<String, Boolean>>(Pair("", false))
     var usuarioActual = mutableStateOf<Usuario?>(null)
     var isLoading = mutableStateOf(false)
 
     private val apiService: AuthAPIService by lazy {
-        RetrofitClient.instance.create(AuthAPIService::class.java)
+        RetrofitClient.getClient(getApplication()).create(AuthAPIService::class.java)
     }
 
     init {

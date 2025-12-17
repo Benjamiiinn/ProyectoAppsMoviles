@@ -1,8 +1,10 @@
 package com.example.proyectomoviles.viewmodel
 
+import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.proyectomoviles.model.Genero
@@ -14,7 +16,7 @@ import com.example.proyectomoviles.remote.RetrofitClient
 import com.example.proyectomoviles.remote.UpdateProductRequest
 import kotlinx.coroutines.launch
 
-class ProductViewModel : ViewModel() {
+class ProductViewModel(application: Application) : AndroidViewModel(application) {
 
     var productos by mutableStateOf<List<Producto>>(emptyList())
         private set
@@ -34,7 +36,7 @@ class ProductViewModel : ViewModel() {
         private set
 
     private val apiService: ProductAPIService by lazy {
-        RetrofitClient.instance.create(ProductAPIService::class.java)
+        RetrofitClient.getClient(getApplication()).create(ProductAPIService::class.java)
     }
 
     init {
@@ -46,7 +48,7 @@ class ProductViewModel : ViewModel() {
         errorMessage = ""
         viewModelScope.launch {
             try {
-                val productsResponse = apiService.getProducts()
+                val productsResponse = apiService.obtenerProductos()
                 if (productsResponse.isSuccessful && productsResponse.body() != null) {
                     productos = productsResponse.body()!!
                 }
@@ -74,9 +76,9 @@ class ProductViewModel : ViewModel() {
                     descripcion = product.descripcion,
                     precio = product.precio,
                     stock = product.stock,
-                    imagenUrl = product.imagenUrl,
-                    plataformaId = product.plataforma.id,
-                    generoId = product.genero.id
+                    imagenUrl = product.imagen,
+                    plataformaId = product.plataforma?.id ?: 0,
+                    generoId = product.genero?.id ?: 0
                 )
                 val response = apiService.createProduct(request)
                 if (response.isSuccessful) {
@@ -143,10 +145,15 @@ class ProductViewModel : ViewModel() {
     }
 
     fun getFilteredProducts(): List<Producto> {
-        return productos.filter {
-            val product = it
-            val matchesGenero = selectedGenero?.let { filterGenero -> product.genero.id == filterGenero.id } ?: true
-            val matchesPlataforma = selectedPlataforma?.let { filterPlataforma -> product.plataforma.id == filterPlataforma.id } ?: true
+        return productos.filter { product ->
+            val matchesGenero = selectedGenero?.let { filterGenero ->
+                product.genero?.id == filterGenero.id
+            } ?: true
+
+            val matchesPlataforma = selectedPlataforma?.let { filterPlataforma ->
+                product.plataforma?.id == filterPlataforma.id
+            } ?: true
+
             matchesGenero && matchesPlataforma
         }
     }

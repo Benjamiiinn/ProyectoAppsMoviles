@@ -7,8 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-// CORREGIDO: Se importa la versión AutoMirrored del icono
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -23,6 +22,7 @@ import com.example.proyectomoviles.model.Producto
 import com.example.proyectomoviles.ui.theme.BackgroundDark
 import com.example.proyectomoviles.ui.theme.VaporPink
 import com.example.proyectomoviles.ui.theme.VaporWhiteBorder
+import com.example.proyectomoviles.ui.theme.outlinedTextFieldColorsCustom
 import com.example.proyectomoviles.viewmodel.ProductViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,30 +31,21 @@ fun AddProductScreen(navController: NavController, productViewModel: ProductView
     var nombre by remember { mutableStateOf("") }
     var precio by remember { mutableStateOf("") }
     var descripcion by remember { mutableStateOf("") }
-    var imagenUrl by remember { mutableStateOf("") }
+    var imagenBase64 by remember { mutableStateOf("") } // Cambio de nombre para claridad
+    var plataformaId by remember { mutableStateOf("") } // Ahora pedimos ID
+    var generoId by remember { mutableStateOf("") }     // Ahora pedimos ID
     var stock by remember { mutableStateOf("") }
 
-    var selectedGenero by remember { mutableStateOf<Genero?>(null) }
-    var selectedPlataforma by remember { mutableStateOf<Plataforma?>(null) }
-
-    val generos = productViewModel.generos
-    val plataformas = productViewModel.plataformas
-
-    val isFormValid by derivedStateOf {
-        nombre.isNotBlank() && precio.isNotBlank() && stock.isNotBlank() &&
-        descripcion.isNotBlank() && imagenUrl.isNotBlank() &&
-        selectedGenero != null && selectedPlataforma != null
+    val isFormValid by remember {
+        derivedStateOf {
+            nombre.isNotBlank() &&
+                    precio.isNotBlank() &&
+                    stock.isNotBlank() &&
+                    plataformaId.isNotBlank() &&
+                    generoId.isNotBlank()
+        }
     }
 
-    val customTextFieldColors = OutlinedTextFieldDefaults.colors(
-        focusedBorderColor = VaporPink,
-        unfocusedBorderColor = VaporWhiteBorder,
-        focusedLabelColor = VaporPink,
-        unfocusedLabelColor = VaporWhiteBorder,
-        cursorColor = Color(0xFF32FBE2), // VaporCyanText
-        focusedTextColor = VaporWhiteBorder,
-        unfocusedTextColor = VaporWhiteBorder
-    )
 
     Scaffold(
         containerColor = BackgroundDark,
@@ -63,126 +54,95 @@ fun AddProductScreen(navController: NavController, productViewModel: ProductView
                 title = { Text("Agregar Producto", color = VaporWhiteBorder) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        // CORREGIDO: Se usa el icono AutoMirrored
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar", tint = VaporPink)
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Regresar", tint = VaporPink)
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = BackgroundDark
-                )
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundDark)
             )
         }
     ) { paddingValues ->
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            color = BackgroundDark
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-                    .verticalScroll(rememberScrollState())
-            ) {
+        Surface(modifier = Modifier.fillMaxSize().padding(paddingValues), color = BackgroundDark) {
+            Column(modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState())) {
                 Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(
-                            BorderStroke(1.dp, VaporWhiteBorder),
-                            shape = CardDefaults.shape
-                        ),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFF6F42C1)
-                    )
+                    modifier = Modifier.fillMaxWidth().border(BorderStroke(1.dp, VaporWhiteBorder), shape = CardDefaults.shape),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF6F42C1))
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            "Nuevo Producto",
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = VaporWhiteBorder
-                        )
+                        Text("Nuevo Juego", style = MaterialTheme.typography.headlineMedium, color = VaporWhiteBorder)
                         Spacer(modifier = Modifier.height(16.dp))
 
                         OutlinedTextField(
-                            value = nombre,
-                            onValueChange = { nombre = it },
-                            label = { Text("Nombre del Producto") },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = customTextFieldColors
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        FilterDropdown(generos, selectedGenero, { selectedGenero = it }, "Género", { it.nombre })
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        FilterDropdown(plataformas, selectedPlataforma, { selectedPlataforma = it }, "Plataforma", { it.nombre })
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        OutlinedTextField(
-                            value = precio,
-                            onValueChange = { precio = it.filter { c -> c.isDigit() } },
-                            label = { Text("Precio") },
-                            modifier = Modifier.fillMaxWidth(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            colors = customTextFieldColors
+                            value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre") },
+                            modifier = Modifier.fillMaxWidth(), colors = outlinedTextFieldColorsCustom()
                         )
                         Spacer(modifier = Modifier.height(8.dp))
 
                         OutlinedTextField(
-                            value = stock,
-                            onValueChange = { stock = it.filter { c -> c.isDigit() } },
-                            label = { Text("Stock") },
-                            modifier = Modifier.fillMaxWidth(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            colors = customTextFieldColors
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        
-                        OutlinedTextField(
-                            value = imagenUrl,
-                            onValueChange = { imagenUrl = it },
-                            label = { Text("URL de la Imagen") },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = customTextFieldColors
+                            value = precio, onValueChange = { precio = it.filter { c -> c.isDigit() } },
+                            label = { Text("Precio (Entero)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.fillMaxWidth(), colors = outlinedTextFieldColorsCustom()
                         )
                         Spacer(modifier = Modifier.height(8.dp))
 
                         OutlinedTextField(
-                            value = descripcion,
-                            onValueChange = { descripcion = it },
-                            label = { Text("Descripción") },
-                            modifier = Modifier.fillMaxWidth().height(120.dp),
-                            colors = customTextFieldColors
+                            value = stock, onValueChange = { stock = it.filter { c -> c.isDigit() } },
+                            label = { Text("Stock") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.fillMaxWidth(), colors = outlinedTextFieldColorsCustom()
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // CAMBIO: Pedimos ID para Platforma y Género
+                        OutlinedTextField(
+                            value = plataformaId, onValueChange = { plataformaId = it.filter { c -> c.isDigit() } },
+                            label = { Text("ID Plataforma (ej: 1)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.fillMaxWidth(), colors = outlinedTextFieldColorsCustom()
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedTextField(
+                            value = generoId, onValueChange = { generoId = it.filter { c -> c.isDigit() } },
+                            label = { Text("ID Género (ej: 1)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.fillMaxWidth(), colors = outlinedTextFieldColorsCustom()
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Nota: Aquí deberías implementar un selector de imagen real. Por ahora es un texto.
+                        OutlinedTextField(
+                            value = imagenBase64, onValueChange = { imagenBase64 = it },
+                            label = { Text("Base64 Imagen (Texto Largo)") },
+                            modifier = Modifier.fillMaxWidth(), colors = outlinedTextFieldColorsCustom()
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        OutlinedTextField(
+                            value = descripcion, onValueChange = { descripcion = it }, label = { Text("Descripción") },
+                            modifier = Modifier.fillMaxWidth().height(100.dp), colors = outlinedTextFieldColorsCustom()
                         )
                         Spacer(modifier = Modifier.height(24.dp))
 
                         Button(
                             onClick = {
+                                // Construimos el objeto con los datos
                                 val newProduct = Producto(
-                                    id = 0, 
+                                    id = 0, // El backend asigna el ID
                                     nombre = nombre,
                                     descripcion = descripcion,
-                                    precio = precio.toIntOrNull() ?: 0, 
+                                    precio = precio.toIntOrNull() ?: 0,
                                     stock = stock.toIntOrNull() ?: 0,
-                                    genero = selectedGenero!!,
-                                    plataforma = selectedPlataforma!!,
-                                    imagenUrl = imagenUrl
+                                    imagen = imagenBase64, // Enviamos el string base64
+                                    // Creamos objetos dummy con el ID correcto para que el ViewModel lo procese
+                                    plataforma = Plataforma(id = plataformaId.toIntOrNull() ?: 0, nombre = ""),
+                                    genero = Genero(id = generoId.toIntOrNull() ?: 0, nombre = "")
                                 )
                                 productViewModel.addProduct(newProduct) { success ->
-                                    if (success) {
-                                        navController.popBackStack()
-                                    }
+                                    if(success) navController.popBackStack()
                                 }
                             },
                             modifier = Modifier.fillMaxWidth(),
                             enabled = isFormValid,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = VaporPink,
-                                disabledContainerColor = VaporPink.copy(alpha = 0.5f)
-                            )
+                            colors = ButtonDefaults.buttonColors(containerColor = VaporPink)
                         ) {
-                            Text("Guardar Producto")
+                            Text("Guardar")
                         }
                     }
                 }

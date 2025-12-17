@@ -25,8 +25,8 @@ fun ProductDetailScreen(
     navController: NavController
 ) {
     // Buscar el producto directamente en la lista del ViewModel
-    val producto by remember(productId, productViewModel.productos) {
-        derivedStateOf { productViewModel.productos.find { it.id == productId } }
+    val producto = remember(productId, productViewModel.productos) {
+        productViewModel.productos.find { it.id == productId }
     }
 
     Surface(modifier = Modifier.fillMaxSize()) {
@@ -50,7 +50,7 @@ fun ProductDetailScreen(
                     .verticalScroll(rememberScrollState())
             ) {
                 AsyncImage(
-                    model = p.imagenUrl,
+                    model = p.imagen,
                     contentDescription = "Imagen de ${p.nombre}",
                     modifier = Modifier
                         .fillMaxWidth()
@@ -64,8 +64,8 @@ fun ProductDetailScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text("Plataforma: ${p.plataforma.nombre}", style = MaterialTheme.typography.bodyMedium)
-                        Text("Género: ${p.genero.nombre}", style = MaterialTheme.typography.bodyMedium)
+                        Text("Plataforma: ${p.plataforma?.nombre ?: "N/A"}", style = MaterialTheme.typography.bodyMedium)
+                        Text("Género: ${p.genero?.nombre ?: "N/A"}", style = MaterialTheme.typography.bodyMedium)
                     }
                     
                     Spacer(modifier = Modifier.height(16.dp))

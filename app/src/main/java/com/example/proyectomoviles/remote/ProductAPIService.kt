@@ -12,7 +12,6 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 
-// --- Data Classes para las peticiones ---
 data class CreateProductRequest(
     val nombre: String,
     val descripcion: String,
@@ -34,7 +33,10 @@ data class UpdateProductRequest(
 interface ProductAPIService {
 
     @GET("api/v1/productos")
-    suspend fun getProducts(): Response<List<Producto>>
+    suspend fun obtenerProductos(): Response<List<Producto>>
+
+    @GET("api/v1/productos/plataforma/{nombre}")
+    suspend fun buscarPorPlataforma(@Path("nombre") nombre: String) : Response<List<Producto>>
 
     @GET("api/v1/generos")
     suspend fun getGeneros(): Response<List<Genero>>
