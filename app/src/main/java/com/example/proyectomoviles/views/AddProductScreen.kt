@@ -118,17 +118,17 @@ fun AddProductScreen(navController: NavController, productViewModel: ProductView
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 // --- CAMPOS RESTAURADOS ---
-                OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre del Producto") }, modifier = Modifier.fillMaxWidth(), colors = customTextFieldColors)
+                OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre del Producto") }, modifier = Modifier.fillMaxWidth(), colors = outlinedTextFieldColorsCustom())
                 Spacer(modifier = Modifier.height(8.dp))
                 FilterDropdown(generos, selectedGenero, { selectedGenero = it }, "Género", { it.nombre }, Modifier.fillMaxWidth())
                 Spacer(modifier = Modifier.height(8.dp))
                 FilterDropdown(plataformas, selectedPlataforma, { selectedPlataforma = it }, "Plataforma", { it.nombre }, Modifier.fillMaxWidth())
                 Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(value = precio, onValueChange = { precio = it.filter { c -> c.isDigit() } }, label = { Text("Precio") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), colors = customTextFieldColors)
+                OutlinedTextField(value = precio, onValueChange = { precio = it.filter { c -> c.isDigit() } }, label = { Text("Precio") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), colors = outlinedTextFieldColorsCustom())
                 Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(value = stock, onValueChange = { stock = it.filter { c -> c.isDigit() } }, label = { Text("Stock") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), colors = customTextFieldColors)
+                OutlinedTextField(value = stock, onValueChange = { stock = it.filter { c -> c.isDigit() } }, label = { Text("Stock") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), colors = outlinedTextFieldColorsCustom())
                 Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(value = descripcion, onValueChange = { descripcion = it }, label = { Text("Descripción") }, modifier = Modifier.fillMaxWidth().height(120.dp), colors = customTextFieldColors)
+                OutlinedTextField(value = descripcion, onValueChange = { descripcion = it }, label = { Text("Descripción") }, modifier = Modifier.fillMaxWidth().height(120.dp), colors = outlinedTextFieldColorsCustom())
             }
 
             // --- ZONA FIJA PARA EL BOTÓN DE GUARDAR ---
@@ -144,7 +144,7 @@ fun AddProductScreen(navController: NavController, productViewModel: ProductView
                         stock = stock.toIntOrNull() ?: 0,
                         genero = selectedGenero!!,
                         plataforma = selectedPlataforma!!,
-                        imagenUrl = imageUri.toString()
+                        imagen = imageUri.toString()
                     )
                     productViewModel.addProduct(newProduct) { success ->
                         isSaving = false

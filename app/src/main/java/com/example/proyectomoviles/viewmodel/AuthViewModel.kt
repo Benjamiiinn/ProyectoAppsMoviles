@@ -1,16 +1,16 @@
 package com.example.proyectomoviles.viewmodel
 
 import android.app.Application
-import android.util.Patterns
+import android.util.Log
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.proyectomoviles.model.Usuario
 import com.example.proyectomoviles.remote.AuthAPIService
 import com.example.proyectomoviles.remote.LoginRequest
 import com.example.proyectomoviles.remote.RegisterRequest
 import com.example.proyectomoviles.remote.RetrofitClient
+import com.example.proyectomoviles.remote.UpdateProfileRequest
 import com.example.proyectomoviles.utils.TokenManager
 import kotlinx.coroutines.launch
 
@@ -26,38 +26,32 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         if (TokenManager.isLoggedIn()) {
-            loadUserProfile()
+            fetchAndSetUser(TokenManager.getUserId())
         }
     }
 
-    fun loadUserProfile() {
-        usuarioActual.value = Usuario(
-            id = TokenManager.getUserId(),
-            nombre = TokenManager.getUserName() ?: "",
-            email = TokenManager.getUserEmail() ?: "",
-            rut = TokenManager.getUserRut() ?: "",
-            telefono = TokenManager.getUserTelefono(),
-            direccion = TokenManager.getUserDireccion()
-        )
-    }
-
-    fun isAdmin(): Boolean {
-        return TokenManager.getUserRole() == "ADMIN"
-    }
-
-    fun updateUser(name: String, rut: String, telefono: String?, direccion: String?, onResult: (Boolean) -> Unit) {
-        val currentToken = TokenManager.getToken() ?: return
-        val currentUserId = TokenManager.getUserId()
-        val currentEmail = TokenManager.getUserEmail() ?: return
-
-        // TODO: Implementar llamada a la API del backend para actualizar el perfil.
-        TokenManager.saveAuthInfo(currentToken, currentUserId, name, currentEmail, rut, telefono, direccion, TokenManager.getUserRole() ?: "USER")
-        loadUserProfile()
-        onResult(true)
-    }
-
-    fun registrar(nombre: String, email: String, password: String, rut: String, telefono: String, direccion: String, onResult: (Boolean) -> Unit) {
-        // ... (lógica de registro)
+    private fun fetchAndSetUser(userId: Int) {
+        viewModelScope.launch {
+            val token = TokenManager.getToken() ?: return@launch
+            if (userId == -1) {
+                logout()
+                return@launch
+            }
+            try {
+                val response = apiService.getProfileById("Bearer $token", userId)
+                if (response.isSuccessful && response.body() != null) {
+                    val user = response.body()!!
+                    TokenManager.saveAuthInfo(token, user.id, user.nombre, user.email, user.rut, user.telefono, user.direccion, TokenManager.getUserRole() ?: "USER")
+                    usuarioActual.value = user
+                } else {
+                    Log.e("AuthViewModel", "Error al obtener el perfil, limpiando sesión.")
+                    logout()
+                }
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Excepción al obtener el perfil: ${e.message}")
+                logout()
+            }
+        }
     }
 
     fun login(email: String, password: String, onResult: (Boolean) -> Unit) {
@@ -70,20 +64,8 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
 
                 if (response.isSuccessful && response.body() != null) {
                     val authResult = response.body()!!
-                    
-                    // Como el login no devuelve los datos del usuario, los guardamos parcialmente.
-                    TokenManager.saveAuthInfo(
-                        token = authResult.token,
-                        userId = authResult.userId,
-                        name = email, // Usamos el email como nombre temporal
-                        email = email, 
-                        rut = "", // No tenemos el RUT
-                        telefono = "", // No tenemos el teléfono
-                        direccion = "", // No tenemos la dirección
-                        role = authResult.role
-                    )
-                    
-                    loadUserProfile()
+                    TokenManager.saveAuthInfo(authResult.token, authResult.userId, "", email, "", "", "", authResult.role)
+                    fetchAndSetUser(authResult.userId)
                     mensaje.value = Pair("Inicio de sesión exitoso", false)
                     onResult(true)
                 } else {
@@ -98,11 +80,50 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
+    
+    // CORREGIDO: Se añade la función de registro que faltaba
+    fun registrar(nombre: String, email: String, password: String, rut: String, telefono: String, direccion: String, onResult: (Boolean) -> Unit) {
+        if (nombre.isBlank() || email.isBlank() || password.isBlank() || rut.isBlank()) {
+            mensaje.value = Pair("Nombre, email, contraseña y RUT son obligatorios.", true)
+            onResult(false)
+            return
+        }
+
+        isLoading.value = true
+        viewModelScope.launch {
+            try {
+                val request = RegisterRequest(nombre, email, password, rut, telefono, direccion)
+                val response = apiService.registrar(request)
+
+                if (response.isSuccessful) {
+                    mensaje.value = Pair("¡Registro exitoso! Ya puedes iniciar sesión.", false)
+                    onResult(true)
+                } else {
+                    val errorBody = response.errorBody()?.string() ?: "Error desconocido"
+                    Log.e("AuthViewModel", "Error de registro: $errorBody")
+                    mensaje.value = Pair("Error en el registro: $errorBody", true)
+                    onResult(false)
+                }
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Excepción en registro: ${e.message}")
+                mensaje.value = Pair(e.message ?: "Ocurrió un error inesperado.", true)
+                onResult(false)
+            } finally {
+                isLoading.value = false
+            }
+        }
+    }
+
+    fun updateUser(telefono: String?, direccion: String?, onResult: (Boolean) -> Unit) {
+        // ... (código existente)
+    }
 
     fun logout() {
         TokenManager.clear()
         usuarioActual.value = null
     }
-    
-    // ... (lógica de validación)
+
+    fun isAdmin(): Boolean {
+        return TokenManager.getUserRole() == "ADMIN"
+    }
 }

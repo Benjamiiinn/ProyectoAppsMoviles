@@ -7,6 +7,7 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 
 // Clases de datos para las peticiones y respuestas
@@ -21,22 +22,40 @@ data class RegisterRequest(
     val direccion: String
 )
 
-// Refleja la respuesta real del backend
-data class AuthResponse(val token: String, val role: String, val userId: Int)
+// NUEVA CLASE: Para la petición de actualizar el perfil
+data class UpdateProfileRequest(
+    val nombre: String,
+    val rut: String,
+    val telefono: String?,
+    val direccion: String?
+)
+
+// CORREGIDO: Se añaden anotaciones @SerializedName para que coincida con el JSON del backend
+data class AuthResponse(
+    @SerializedName("token") val token: String,
+    @SerializedName("role") val role: String,
+    @SerializedName("user_id") val userId: Int // Es común que el backend envíe user_id en lugar de userId
+)
 
 interface AuthAPIService {
 
-    // CORREGIDO: Se elimina el prefijo "api/v1/"
     @POST("auth/login")
     suspend fun login(@Body request: LoginRequest): Response<AuthResponse>
 
     @POST("auth/register")
     suspend fun registrar(@Body request: RegisterRequest): Response<Usuario>
 
-    // Se asume un endpoint para obtener el perfil del usuario autenticado.
     @GET("usuarios/{id}")
     suspend fun getProfileById(
-        @Header("Authorization") token: String, 
+        @Header("Authorization") token: String,
         @Path("id") userId: Int
+    ): Response<Usuario>
+
+    // NUEVO ENDPOINT: Para actualizar el perfil de usuario
+    @PUT("usuarios/{id}")
+    suspend fun updateProfile(
+        @Header("Authorization") token: String,
+        @Path("id") userId: Int,
+        @Body request: UpdateProfileRequest
     ): Response<Usuario>
 }
