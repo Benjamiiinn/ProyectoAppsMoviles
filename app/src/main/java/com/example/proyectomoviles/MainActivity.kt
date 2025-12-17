@@ -30,25 +30,16 @@ class MainActivity : ComponentActivity() {
             val cartViewModel: CartViewModel = viewModel()
             val ordersViewModel: OrdersViewModel = viewModel()
 
-            // La conexión entre ViewModels ya no es necesaria
-
             var title by remember { mutableStateOf("Login") }
 
             Scaffold(
                 topBar = {
                     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
-                    val routesWithoutTopBar = setOf("admin", "addProduct", "register", "login", "orders", "confirmation", "profile")
+                    val routesWithoutTopBar = setOf("login", "register")
 
                     if (currentRoute !in routesWithoutTopBar) {
-                        val showCartIcon = currentRoute?.startsWith("home") == true ||
-                            currentRoute?.startsWith("productDetail") == true ||
-                            currentRoute == "cart" ||
-                            currentRoute == "payment" ||
-                            currentRoute == "novedades"
-
-                        if (showCartIcon) {
-                            MiTopBar(title, cartViewModel, navController)
-                        }
+                        // La TopBar se mostrará en todas las demás pantallas.
+                        MiTopBar(title, cartViewModel, navController)
                     }
                 }
             ) { innerPadding ->
@@ -103,7 +94,8 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("admin") {
                         title = "Gestión de Productos"
-                        AdminScreen(productViewModel, navController)
+                        // CORREGIDO: Pasamos el AuthViewModel a la AdminScreen
+                        AdminScreen(authViewModel, productViewModel, navController)
                     }
                     composable("addProduct") {
                         title = "Agregar Producto"

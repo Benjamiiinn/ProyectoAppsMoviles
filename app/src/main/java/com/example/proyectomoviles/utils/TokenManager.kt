@@ -12,6 +12,7 @@ object TokenManager {
     private const val KEY_USER_RUT = "user_rut"
     private const val KEY_USER_TELEFONO = "user_telefono"
     private const val KEY_USER_DIRECCION = "user_direccion"
+    private const val KEY_USER_ROLE = "user_role" // NUEVA CLAVE
 
     private lateinit var preferences: SharedPreferences
 
@@ -19,7 +20,8 @@ object TokenManager {
         preferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     }
 
-    fun saveAuthInfo(token: String, userId: Int, name: String, email: String, rut: String, telefono: String?, direccion: String?) {
+    // CORREGIDO: Ahora también guarda el rol
+    fun saveAuthInfo(token: String, userId: Int, name: String, email: String, rut: String, telefono: String?, direccion: String?, role: String) {
         preferences.edit().apply {
             putString(KEY_TOKEN, token)
             putInt(KEY_USER_ID, userId)
@@ -28,6 +30,7 @@ object TokenManager {
             putString(KEY_USER_RUT, rut)
             putString(KEY_USER_TELEFONO, telefono)
             putString(KEY_USER_DIRECCION, direccion)
+            putString(KEY_USER_ROLE, role) // Guardamos el rol
             apply()
         }
     }
@@ -39,6 +42,7 @@ object TokenManager {
     fun getUserRut(): String? = preferences.getString(KEY_USER_RUT, null)
     fun getUserTelefono(): String? = preferences.getString(KEY_USER_TELEFONO, null)
     fun getUserDireccion(): String? = preferences.getString(KEY_USER_DIRECCION, null)
+    fun getUserRole(): String? = preferences.getString(KEY_USER_ROLE, null) // NUEVA FUNCIÓN
 
     fun isLoggedIn(): Boolean = getToken() != null
 

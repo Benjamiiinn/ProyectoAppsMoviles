@@ -16,8 +16,6 @@ fun ProfileScreen(navController: NavController, authViewModel: AuthViewModel) {
     val currentUser = authViewModel.usuarioActual.value
 
     // Estados para cada campo editable
-    var nombre by remember { mutableStateOf(currentUser?.nombre ?: "") }
-    var rut by remember { mutableStateOf(currentUser?.rut ?: "") }
     var telefono by remember { mutableStateOf(currentUser?.telefono ?: "") }
     var direccion by remember { mutableStateOf(currentUser?.direccion ?: "") }
     
@@ -26,8 +24,6 @@ fun ProfileScreen(navController: NavController, authViewModel: AuthViewModel) {
     // Actualizar los estados si el usuario cambia (por ejemplo, al cargar por primera vez)
     LaunchedEffect(currentUser) {
         if (currentUser != null) {
-            nombre = currentUser.nombre
-            rut = currentUser.rut
             telefono = currentUser.telefono ?: ""
             direccion = currentUser.direccion ?: ""
         }
@@ -45,10 +41,11 @@ fun ProfileScreen(navController: NavController, authViewModel: AuthViewModel) {
         Spacer(modifier = Modifier.height(32.dp))
 
         OutlinedTextField(
-            value = nombre,
-            onValueChange = { nombre = it },
+            value = currentUser?.nombre ?: "",
+            onValueChange = { /* No se hace nada */ },
             label = { Text("Nombre") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = false // CORREGIDO: No se permite editar el nombre
         )
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -62,10 +59,11 @@ fun ProfileScreen(navController: NavController, authViewModel: AuthViewModel) {
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
-            value = rut,
-            onValueChange = { rut = it },
+            value = currentUser?.rut ?: "",
+            onValueChange = { /* No se hace nada */ },
             label = { Text("RUT") },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            enabled = false // CORREGIDO: No se permite editar el RUT
         )
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -95,8 +93,8 @@ fun ProfileScreen(navController: NavController, authViewModel: AuthViewModel) {
 
         Button(
             onClick = {
-                // Llamada corregida con todos los parámetros
-                authViewModel.updateUser(nombre, rut, telefono, direccion) { success ->
+                // Llamada actualizada para enviar solo los campos editables
+                authViewModel.updateUser(currentUser?.nombre ?: "", currentUser?.rut ?: "", telefono, direccion) { success ->
                     if (success) {
                         authViewModel.mensaje.value = Pair("¡Datos actualizados con éxito!", false)
                     } else {
