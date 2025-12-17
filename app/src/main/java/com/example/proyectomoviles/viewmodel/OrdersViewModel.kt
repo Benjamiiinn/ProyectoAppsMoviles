@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.proyectomoviles.model.Order
 import com.example.proyectomoviles.remote.OrderAPIService
 import com.example.proyectomoviles.remote.RetrofitClient
+import com.example.proyectomoviles.utils.TokenManager // Importante
 import kotlinx.coroutines.launch
 
 class OrdersViewModel(application: Application) : AndroidViewModel(application) {
@@ -20,11 +21,17 @@ class OrdersViewModel(application: Application) : AndroidViewModel(application) 
     var errorMessage by mutableStateOf("")
         private set
 
+    // --- AGREGADO: Propiedades que faltaban para que OrdersScreen no de error ---
+    val currentUserId: Int
+        get() = TokenManager.getUserId()
+
+    val currentUserEmail: String
+        get() = TokenManager.getUserEmail() ?: ""
+
     private val apiService: OrderAPIService by lazy {
         RetrofitClient.getClient(getApplication()).create(OrderAPIService::class.java)
     }
 
-    // Iniciamos la carga apenas se crea el ViewModel
     init {
         fetchOrders()
     }
@@ -34,7 +41,7 @@ class OrdersViewModel(application: Application) : AndroidViewModel(application) 
         errorMessage = ""
         viewModelScope.launch {
             try {
-                // El backend sabe quién eres por el Token, no hace falta enviar ID
+                // El backend identifica al usuario por el Token en la cabecera
                 val response = apiService.getMyOrders()
 
                 if (response.isSuccessful && response.body() != null) {

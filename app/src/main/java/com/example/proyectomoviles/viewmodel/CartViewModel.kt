@@ -16,96 +16,117 @@ import com.example.proyectomoviles.remote.RetrofitClient
 import com.example.proyectomoviles.utils.TokenManager
 import kotlinx.coroutines.launch
 
-// Cambiamos a AndroidViewModel para tener acceso al Contexto (necesario para Retrofit)
 class CartViewModel(application: Application) : AndroidViewModel(application) {
 
     var cartItems by mutableStateOf<List<CartItem>>(emptyList())
         private set
+
+    // --- AGREGADO: Variable para guardar la compra y mostrarla en ConfirmationScreen ---
+    var lastSuccessfulOrder by mutableStateOf<List<CartItem>>(emptyList())
+        private set
+
+    // --- AGREGADO: Propiedad para obtener el ID del usuario actual ---
+    val currentUserId: Int
+        get() = TokenManager.getUserId()
+
     var isLoading by mutableStateOf(false)
         private set
 
-    // Inyectamos el servicio de pedidos
     private val orderService: OrderAPIService by lazy {
         RetrofitClient.getClient(getApplication()).create(OrderAPIService::class.java)
     }
 
     fun addToCart(producto: Producto) {
-        // ... (Tu lógica de agregar sigue igual, la omito para ahorrar espacio) ...
+        if (producto.stock <= 0) return
+
         val existingItem = cartItems.find { it.producto.id == producto.id }
         if (existingItem != null) {
-            if (existingItem.quantity < producto.stock) { increaseQuantity(producto.id) }
+            if (existingItem.quantity < producto.stock) {
+                increaseQuantity(producto.id)
+            }
         } else {
             cartItems = cartItems + CartItem(producto = producto, quantity = 1)
         }
     }
 
     fun increaseQuantity(productId: Int) {
-        cartItems = cartItems.map { if (it.producto.id == productId && it.quantity < it.producto.stock) it.copy(quantity = it.quantity + 1) else it }
+        cartItems = cartItems.map {
+            if (it.producto.id == productId && it.quantity < it.producto.stock) {
+                it.copy(quantity = it.quantity + 1)
+            } else {
+                it
+            }
+        }
     }
 
     fun decreaseQuantity(productId: Int) {
-        cartItems = cartItems.mapNotNull { if (it.producto.id == productId) { val newQ = it.quantity - 1; if (newQ > 0) it.copy(quantity = newQ) else null } else it }
+        cartItems = cartItems.mapNotNull {
+            if (it.producto.id == productId) {
+                val newQ = it.quantity - 1
+                if (newQ > 0) it.copy(quantity = newQ) else null
+            } else {
+                it
+            }
+        }
     }
 
     fun removeFromCart(productId: Int) {
         cartItems = cartItems.filterNot { it.producto.id == productId }
     }
 
-    fun clearCart() { cartItems = emptyList() }
+    fun clearCart() {
+        cartItems = emptyList()
+    }
 
     fun getTotalPrice(): Double {
         return cartItems.sumOf { it.producto.precio.toDouble() * it.quantity }
     }
 
-    // --- LA CONEXIÓN REAL ---
+    // --- CHECKOUT REAL CONECTADO A AWS ---
     fun checkout(onResult: (Boolean) -> Unit) {
-        if (cartItems.isEmpty()) { onResult(false); return }
+        if (cartItems.isEmpty()) {
+            onResult(false)
+            return
+        }
 
         isLoading = true
         viewModelScope.launch {
             try {
-                // 1. Obtener ID del usuario logueado
                 val userId = TokenManager.getUserId()
-                if (userId == 0) {
-                    println("Error: Usuario no logueado o ID inválido")
-                    onResult(false)
-                    isLoading = false
-                    return@launch
-                }
 
-                // 2. Transformar los items del carrito al formato que espera el Backend
+                // 1. Transformar carrito al formato del Backend
                 val itemsRequest = cartItems.map { cartItem ->
                     ItemCompraRequest(
                         idProducto = cartItem.producto.id,
                         cantidad = cartItem.quantity,
-                        precio = cartItem.producto.precio // Precio unitario al momento de compra
+                        precio = cartItem.producto.precio
                     )
                 }
 
-                // 3. Crear el Request completo
                 val request = PedidoRequest(
                     idUsuario = userId,
-                    metodoPago = "TARJETA", // Puedes hacerlo dinámico después
+                    metodoPago = "TARJETA",
                     items = itemsRequest
                 )
 
-                // 4. Enviar a la nube
+                // 2. Enviar a AWS
                 val response = orderService.createOrder(request)
 
                 if (response.isSuccessful) {
-                    println("Compra exitosa: ${response.body()}")
-                    cartItems = emptyList() // Vaciar carrito
+                    // 3. ¡Éxito! Guardamos copia para la pantalla de confirmación
+                    lastSuccessfulOrder = ArrayList(cartItems) // Copia de seguridad
+
+                    // 4. Limpiamos el carrito
+                    cartItems = emptyList()
+
                     onResult(true)
                 } else {
-                    val error = response.errorBody()?.string()
-                    println("Error en compra: ${response.code()} - $error")
-                    // Tip: Puedes mostrar un Toast aquí si quieres
+                    val error = response.errorBody()?.string() ?: "Error desconocido"
                     Toast.makeText(getApplication(), "Error: $error", Toast.LENGTH_LONG).show()
                     onResult(false)
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
-                println("Excepción en checkout: ${e.message}")
+                Toast.makeText(getApplication(), "Error de conexión", Toast.LENGTH_SHORT).show()
                 onResult(false)
             } finally {
                 isLoading = false

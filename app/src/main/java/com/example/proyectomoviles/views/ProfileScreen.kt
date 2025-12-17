@@ -15,16 +15,17 @@ import com.example.proyectomoviles.viewmodel.AuthViewModel
 fun ProfileScreen(navController: NavController, authViewModel: AuthViewModel) {
     val currentUser = authViewModel.usuarioActual.value
 
-    // Estados para cada campo editable
-    var telefono by remember { mutableStateOf(currentUser?.telefono ?: "") }
+    // Estados para campos editables (teléfono y dirección)
+    // Convertimos teléfono a String para que sea fácil de editar en el TextField
+    var telefono by remember { mutableStateOf(currentUser?.telefono?.toString() ?: "") }
     var direccion by remember { mutableStateOf(currentUser?.direccion ?: "") }
-    
+
     val (messageText, isError) = authViewModel.mensaje.value
 
-    // Actualizar los estados si el usuario cambia (por ejemplo, al cargar por primera vez)
+    // Actualizar los estados si el usuario cambia (ej. al cargar)
     LaunchedEffect(currentUser) {
         if (currentUser != null) {
-            telefono = currentUser.telefono ?: ""
+            telefono = currentUser.telefono?.toString() ?: ""
             direccion = currentUser.direccion ?: ""
         }
     }
@@ -40,33 +41,37 @@ fun ProfileScreen(navController: NavController, authViewModel: AuthViewModel) {
         Text("Mi Perfil", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(32.dp))
 
+        // NOMBRE (Solo lectura)
         OutlinedTextField(
             value = currentUser?.nombre ?: "",
-            onValueChange = { /* No se hace nada */ },
+            onValueChange = { },
             label = { Text("Nombre") },
             modifier = Modifier.fillMaxWidth(),
-            enabled = false // CORREGIDO: No se permite editar el nombre
+            enabled = false
         )
         Spacer(modifier = Modifier.height(16.dp))
 
+        // EMAIL (Solo lectura)
         OutlinedTextField(
             value = currentUser?.email ?: "",
-            onValueChange = { /* No se hace nada */ },
+            onValueChange = { },
             label = { Text("Email") },
             modifier = Modifier.fillMaxWidth(),
-            enabled = false // No se permite editar el email
+            enabled = false
         )
         Spacer(modifier = Modifier.height(16.dp))
 
+        // RUT (Solo lectura)
         OutlinedTextField(
             value = currentUser?.rut ?: "",
-            onValueChange = { /* No se hace nada */ },
+            onValueChange = { },
             label = { Text("RUT") },
             modifier = Modifier.fillMaxWidth(),
-            enabled = false // CORREGIDO: No se permite editar el RUT
+            enabled = false
         )
         Spacer(modifier = Modifier.height(16.dp))
 
+        // TELÉFONO (Editable)
         OutlinedTextField(
             value = telefono,
             onValueChange = { telefono = it },
@@ -75,6 +80,7 @@ fun ProfileScreen(navController: NavController, authViewModel: AuthViewModel) {
         )
         Spacer(modifier = Modifier.height(16.dp))
 
+        // DIRECCIÓN (Editable)
         OutlinedTextField(
             value = direccion,
             onValueChange = { direccion = it },
@@ -91,14 +97,22 @@ fun ProfileScreen(navController: NavController, authViewModel: AuthViewModel) {
             Spacer(modifier = Modifier.height(16.dp))
         }
 
+        // --- BOTÓN CORREGIDO ---
         Button(
             onClick = {
-                // CORREGIDO: La llamada ahora solo pasa los campos editables
-                authViewModel.updateUser(telefono, direccion) { success ->
+                // Obtenemos los valores actuales de nombre y rut para enviarlos
+                val currentName = currentUser?.nombre ?: ""
+                val currentRut = currentUser?.rut ?: ""
+
+                // CORRECCIÓN: Enviamos TODOS los parámetros en orden o por nombre
+                authViewModel.updateUser(
+                    name = currentName,
+                    rut = currentRut,
+                    telefono = telefono,
+                    direccion = direccion
+                ) { success ->
                     if (success) {
-                        authViewModel.mensaje.value = Pair("¡Datos actualizados con éxito!", false)
-                    } else {
-                         authViewModel.mensaje.value = Pair("No se pudieron actualizar los datos.", true)
+                        // El mensaje ya se maneja en el ViewModel, pero puedes forzar un refresco aquí si quieres
                     }
                 }
             },
@@ -106,7 +120,9 @@ fun ProfileScreen(navController: NavController, authViewModel: AuthViewModel) {
         ) {
             Text("Guardar Cambios")
         }
+
         Spacer(modifier = Modifier.height(16.dp))
+
         Button(
             onClick = { navController.popBackStack() },
             modifier = Modifier.fillMaxWidth(),
