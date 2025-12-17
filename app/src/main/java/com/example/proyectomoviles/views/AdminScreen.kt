@@ -3,10 +3,12 @@ package com.example.proyectomoviles.views
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
@@ -20,11 +22,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.proyectomoviles.model.Producto
 import com.example.proyectomoviles.ui.theme.*
+import com.example.proyectomoviles.viewmodel.AuthViewModel
 import com.example.proyectomoviles.viewmodel.ProductViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminScreen(productViewModel: ProductViewModel = viewModel(), navController: NavController) {
+fun AdminScreen(
+    authViewModel: AuthViewModel, 
+    productViewModel: ProductViewModel = viewModel(), 
+    navController: NavController
+) {
     val productos = productViewModel.productos
     var showEditDialog by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf<Producto?>(null) }
@@ -35,9 +42,15 @@ fun AdminScreen(productViewModel: ProductViewModel = viewModel(), navController:
         topBar = {
             TopAppBar(
                 title = { Text("Panel de Administrador", color = VaporWhiteBorder) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Regresar", tint = VaporPink)
+                actions = {
+                    Button(
+                        onClick = {
+                            authViewModel.logout()
+                            navController.navigate("login") { popUpTo(0) }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red)
+                    ) {
+                        Text("Salir")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundDark)
@@ -78,15 +91,15 @@ fun AdminScreen(productViewModel: ProductViewModel = viewModel(), navController:
                         showDeleteConfirm = it
                     }
                 )
-                HorizontalDivider(color = VaporWhiteBorder.copy(alpha = 0.2f)) // Corregido: Renombrado a HorizontalDivider
+                HorizontalDivider(color = VaporWhiteBorder.copy(alpha = 0.2f))
             }
         }
     }
 
-    // -- Diálogo de Edición --
     if (showEditDialog && productoToEdit != null) {
         EditProductDialog(
             producto = productoToEdit!!,
+            productViewModel = productViewModel,
             onDismiss = { showEditDialog = false },
             onConfirm = { updatedProduct ->
                 productViewModel.editProduct(updatedProduct) { success ->
@@ -98,7 +111,6 @@ fun AdminScreen(productViewModel: ProductViewModel = viewModel(), navController:
         )
     }
     
-    // -- Diálogo de Confirmación de Borrado --
     if(showDeleteConfirm != null) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = null },
@@ -123,39 +135,32 @@ fun AdminScreen(productViewModel: ProductViewModel = viewModel(), navController:
                     Text("Cancelar", color = VaporCyanText)
                 }
             },
-            containerColor = BackgroundDark,
-            titleContentColor = VaporPink,
-            textContentColor = VaporWhiteBorder
+            containerColor = BackgroundDark
         )
     }
 }
 
 @Composable
 fun AdminProductCard(producto: Producto, onEditClick: (Producto) -> Unit, onDeleteClick: (Producto) -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                producto.nombre,
-                modifier = Modifier.weight(1f),
-                color = VaporCyanText,
-                style = MaterialTheme.typography.bodyLarge
-            )
-            Row {
-                IconButton(onClick = { onEditClick(producto) }) {
-                    Icon(Icons.Default.Edit, contentDescription = "Editar", tint = VaporGreen)
-                }
-                IconButton(onClick = { onDeleteClick(producto) }) {
-                    Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = VaporRed)
-                }
+        Text(
+            producto.nombre,
+            modifier = Modifier.weight(1f),
+            color = VaporCyanText,
+            style = MaterialTheme.typography.bodyLarge
+        )
+        Row {
+            IconButton(onClick = { onEditClick(producto) }) {
+                Icon(Icons.Default.Edit, contentDescription = "Editar", tint = Color.Green)
+            }
+            IconButton(onClick = { onDeleteClick(producto) }) {
+                Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = Color.Red)
             }
         }
     }
@@ -163,34 +168,35 @@ fun AdminProductCard(producto: Producto, onEditClick: (Producto) -> Unit, onDele
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditProductDialog(producto: Producto, onDismiss: () -> Unit, onConfirm: (Producto) -> Unit) {
+fun EditProductDialog(
+    producto: Producto, 
+    productViewModel: ProductViewModel,
+    onDismiss: () -> Unit, 
+    onConfirm: (Producto) -> Unit
+) {
     var nombre by remember { mutableStateOf(producto.nombre) }
     var descripcion by remember { mutableStateOf(producto.descripcion) }
     var precio by remember { mutableStateOf(producto.precio.toString()) }
     var stock by remember { mutableStateOf(producto.stock.toString()) }
+    var selectedGenero by remember { mutableStateOf(producto.genero) }
+    var selectedPlataforma by remember { mutableStateOf(producto.plataforma) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Editar Producto", color = VaporPink) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedTextField(
-                    value = nombre,
-                    onValueChange = { nombre = it },
-                    label = { Text("Nombre") },
-                    colors = outlinedTextFieldColorsCustom()
-                )
-                OutlinedTextField(
-                    value = descripcion,
-                    onValueChange = { descripcion = it },
-                    label = { Text("Descripción") },
-                    colors = outlinedTextFieldColorsCustom()
-                )
+            Column(modifier = Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                OutlinedTextField(value = nombre, onValueChange = { nombre = it }, label = { Text("Nombre") }, colors = outlinedTextFieldColorsCustom())
+                OutlinedTextField(value = descripcion, onValueChange = { descripcion = it }, label = { Text("Descripción") }, colors = outlinedTextFieldColorsCustom())
+                
+                FilterDropdown(productViewModel.generos, selectedGenero, { selectedGenero = it!! }, "Género", { it.nombre })
+                FilterDropdown(productViewModel.plataformas, selectedPlataforma, { selectedPlataforma = it!! }, "Plataforma", { it.nombre })
+
                 OutlinedTextField(
                     value = precio,
-                    onValueChange = { precio = it.filter { c -> c.isDigit() } }, // Acepta solo dígitos
+                    onValueChange = { precio = it.filter { c -> c.isDigit() } },
                     label = { Text("Precio") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), // Teclado numérico
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     colors = outlinedTextFieldColorsCustom()
                 )
                 OutlinedTextField(
@@ -208,8 +214,10 @@ fun EditProductDialog(producto: Producto, onDismiss: () -> Unit, onConfirm: (Pro
                     val updatedProduct = producto.copy(
                         nombre = nombre,
                         descripcion = descripcion,
-                        precio = precio.toIntOrNull() ?: producto.precio, // CORREGIDO: Convertir a Int
-                        stock = stock.toIntOrNull() ?: producto.stock
+                        precio = precio.toIntOrNull() ?: producto.precio,
+                        stock = stock.toIntOrNull() ?: producto.stock,
+                        genero = selectedGenero,
+                        plataforma = selectedPlataforma
                     )
                     onConfirm(updatedProduct)
                 },
@@ -227,14 +235,3 @@ fun EditProductDialog(producto: Producto, onDismiss: () -> Unit, onConfirm: (Pro
     )
 }
 
-
-@Composable
-fun outlinedTextFieldColorsCustom() = OutlinedTextFieldDefaults.colors(
-    focusedBorderColor = VaporPink,
-    unfocusedBorderColor = VaporWhiteBorder.copy(alpha = 0.7f),
-    focusedLabelColor = VaporPink,
-    unfocusedLabelColor = VaporWhiteBorder.copy(alpha = 0.7f),
-    cursorColor = VaporPink,
-    focusedTextColor = VaporWhiteBorder,
-    unfocusedTextColor = VaporWhiteBorder
-)

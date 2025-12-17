@@ -24,21 +24,36 @@ import com.example.proyectomoviles.model.Genero
 import com.example.proyectomoviles.model.Plataforma
 import com.example.proyectomoviles.model.Producto
 import com.example.proyectomoviles.ui.theme.BackgroundDark
-import com.example.proyectomoviles.ui.theme.outlinedTextFieldColorsCustom
+import com.example.proyectomoviles.ui.theme.VaporPink
+import com.example.proyectomoviles.ui.theme.VaporCyanText
+import com.example.proyectomoviles.ui.theme.VaporWhiteBorder
 import com.example.proyectomoviles.utils.formatPrice
 import com.example.proyectomoviles.viewmodel.AuthViewModel
 import com.example.proyectomoviles.viewmodel.ProductViewModel
 
-val VaporPink = Color(0xFFEA39B8)
-val VaporCyanText = Color(0xFF32FBE2)
-val VaporWhiteBorder = Color(0xFFDEE2E6)
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     authViewModel: AuthViewModel,
     productViewModel: ProductViewModel = viewModel(),
     navController: NavController
 ) {
+    // --- LÓGICA DE REDIRECCIÓN PARA ADMINISTRADORES RESTAURADA ---
+    if (authViewModel.isAdmin()) {
+        LaunchedEffect(Unit) {
+            navController.navigate("admin") {
+                popUpTo("home/{email}") { inclusive = true }
+            }
+        }
+        Surface(modifier = Modifier.fillMaxSize(), color = BackgroundDark) {
+            Box(contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = VaporPink)
+            }
+        }
+        return // Detenemos la ejecución aquí para los admins
+    }
+
+    // --- UI PARA USUARIOS NORMALES ---
     val isLoading = productViewModel.isLoading
     val errorMessage = productViewModel.errorMessage
 
@@ -47,47 +62,40 @@ fun HomeScreen(
         it.nombre.contains(searchQuery, ignoreCase = true)
     }
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = BackgroundDark
-    ) {
+    Scaffold(
+        containerColor = BackgroundDark,
+        topBar = { 
+            TopAppBar(
+                title = { 
+                    Text(
+                        text = "Bienvenido, ${authViewModel.usuarioActual.value?.nombre}",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = VaporCyanText
+                    )
+                },
+                actions = {
+                    Button(onClick = { navController.navigate("novedades") }, colors = ButtonDefaults.buttonColors(containerColor = VaporPink)) {
+                        Text("Novedades")
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(onClick = { navController.navigate("profile") }, colors = ButtonDefaults.buttonColors(containerColor = VaporCyanText)) {
+                        Text("Mi Perfil", color = BackgroundDark)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(onClick = { authViewModel.logout(); navController.navigate("login") { popUpTo(0) } }, colors = ButtonDefaults.buttonColors(containerColor = Color.Red)) {
+                        Text("Salir")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundDark)
+            )
+        }
+    ) { paddingValues -> 
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(paddingValues)
+                .padding(horizontal = 16.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Bienvenido, ${authViewModel.usuarioActual.value?.nombre}",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.weight(1f),
-                    color = VaporCyanText
-                )
-                 Button(
-                    onClick = { navController.navigate("profile") },
-                    colors = ButtonDefaults.buttonColors(containerColor = VaporCyanText),
-                    modifier = Modifier.padding(start = 8.dp)
-                ) {
-                    Text("Mi Perfil", color = BackgroundDark)
-                }
-                Button(
-                    onClick = {
-                        authViewModel.logout()
-                        navController.navigate("login") {
-                            popUpTo(0)
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                    modifier = Modifier.padding(start = 8.dp)
-                ) {
-                    Text("Salir")
-                }
-            }
-
             Text(
                 text = "Catálogo de Juegos",
                 style = MaterialTheme.typography.titleLarge,
@@ -107,7 +115,6 @@ fun HomeScreen(
                 singleLine = true
             )
 
-            // --- Sección de Filtros ---
             Row(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -158,8 +165,16 @@ fun HomeScreen(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Suppress("DEPRECATION")
 @Composable
-fun <T> FilterDropdown(items: List<T>, selectedItem: T?, onItemSelected: (T?) -> Unit, label: String, nameExtractor: (T) -> String, modifier: Modifier = Modifier) {
+fun <T> FilterDropdown(
+    items: List<T>,
+    selectedItem: T?,
+    onItemSelected: (T?) -> Unit,
+    label: String,
+    nameExtractor: (T) -> String,
+    modifier: Modifier = Modifier
+) {
     var expanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }, modifier = modifier) {
@@ -174,7 +189,10 @@ fun <T> FilterDropdown(items: List<T>, selectedItem: T?, onItemSelected: (T?) ->
         )
 
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            DropdownMenuItem(text = { Text("Todos") }, onClick = { onItemSelected(null); expanded = false })
+            DropdownMenuItem(text = { Text("Todos") }, onClick = { 
+                onItemSelected(null)
+                expanded = false 
+            })
             items.forEach { item ->
                 DropdownMenuItem(
                     text = { Text(nameExtractor(item)) },
@@ -187,6 +205,17 @@ fun <T> FilterDropdown(items: List<T>, selectedItem: T?, onItemSelected: (T?) ->
         }
     }
 }
+
+@Composable
+fun outlinedTextFieldColorsCustom() = OutlinedTextFieldDefaults.colors(
+    focusedBorderColor = VaporPink,
+    unfocusedBorderColor = VaporWhiteBorder.copy(alpha = 0.7f),
+    focusedLabelColor = VaporPink,
+    unfocusedLabelColor = VaporWhiteBorder.copy(alpha = 0.7f),
+    cursorColor = VaporPink,
+    focusedTextColor = VaporWhiteBorder,
+    unfocusedTextColor = VaporWhiteBorder
+)
 
 @Composable
 fun ProductCard(producto: Producto, onClick: () -> Unit) {

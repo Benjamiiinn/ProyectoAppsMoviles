@@ -7,6 +7,12 @@ import retrofit2.http.Query
 
 // --- Data Classes para la respuesta de la API de RAWG ---
 
+// Representa la clasificación de edad (ESRB)
+data class EsrbRating(
+    val id: Int,
+    val name: String
+)
+
 // El objeto principal que devuelve la lista de juegos
 data class GamesResponse(
     val results: List<GameFromApi>
@@ -16,14 +22,16 @@ data class GamesResponse(
 data class GameFromApi(
     val id: Int,
     val name: String,
-    val background_image: String? // La URL de la imagen puede ser nula
+    val background_image: String?,
+    val metacritic: Int?, // Puntuación de Metacritic (puede ser nulo)
+    val esrb_rating: EsrbRating? // Clasificación de edad (puede ser nulo)
 )
 
 // Representa los detalles completos de un solo juego
 data class GameDetailFromApi(
     val id: Int,
     val name: String,
-    val description_raw: String, // La descripción completa en texto plano
+    val description_raw: String, 
     val background_image: String?
 )
 
