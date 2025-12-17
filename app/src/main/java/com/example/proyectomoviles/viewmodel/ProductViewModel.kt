@@ -51,14 +51,20 @@ class ProductViewModel(application: Application) : AndroidViewModel(application)
                 val productsResponse = apiService.obtenerProductos()
                 if (productsResponse.isSuccessful && productsResponse.body() != null) {
                     productos = productsResponse.body()!!
+                } else {
+                    errorMessage = "Error al obtener productos: ${productsResponse.code()}"
                 }
                 val generosResponse = apiService.getGeneros()
                 if (generosResponse.isSuccessful && generosResponse.body() != null) {
                     generos = generosResponse.body()!!
+                } else {
+                    errorMessage = "Error al obtener géneros: ${generosResponse.code()}"
                 }
                 val plataformasResponse = apiService.getPlataformas()
                 if (plataformasResponse.isSuccessful && plataformasResponse.body() != null) {
                     plataformas = plataformasResponse.body()!!
+                } else {
+                    errorMessage = "Error al obtener plataformas: ${plataformasResponse.code()}"
                 }
             } catch (e: Exception) {
                 errorMessage = "Error de conexión: ${e.message}"
